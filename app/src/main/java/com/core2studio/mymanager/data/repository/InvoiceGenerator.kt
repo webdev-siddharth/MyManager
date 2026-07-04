@@ -37,7 +37,7 @@ class InvoiceGenerator(
     private val deepSlate = android.graphics.Color.parseColor("#2C3E50")
     private val forestGreen = android.graphics.Color.parseColor("#2D6A4F")
     private val sageGreen = android.graphics.Color.parseColor("#40916C")
-    private val limeAccent = android.graphics.Color.parseColor("#4CAF50")
+    private val limeAccent = android.graphics.Color.parseColor("#55A859")
     private val paleMint = android.graphics.Color.parseColor("#E8F5E9")
     private val mintCream = android.graphics.Color.parseColor("#F0F4F8")
     private val white = android.graphics.Color.WHITE
