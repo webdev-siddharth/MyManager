@@ -49,12 +49,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import coil3.compose.AsyncImage
-import com.core2studio.mymanager.theme.DeepSlate
-import com.core2studio.mymanager.theme.ForestGreen
-import com.core2studio.mymanager.theme.MintCream
-import com.core2studio.mymanager.theme.PaleMint
-import com.core2studio.mymanager.theme.SageGreen
-import com.core2studio.mymanager.theme.White
+
 import com.core2studio.mymanager.ui.components.MyManagerTopBar
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -81,7 +76,7 @@ fun BusinessCardScreen(
                 onBackClick = onBack
             )
         },
-        containerColor = MintCream,
+        containerColor = MaterialTheme.colorScheme.background,
         floatingActionButton = {
             FloatingActionButton(
                 onClick = {
@@ -97,8 +92,8 @@ fun BusinessCardScreen(
                         )
                     }
                 },
-                containerColor = ForestGreen,
-                contentColor = White
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary
             ) {
                 Icon(
                     imageVector = Icons.Filled.Share,
@@ -122,9 +117,9 @@ fun BusinessCardScreen(
                     .fillMaxWidth()
                     .padding(8.dp),
                 shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = White),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                 elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-                border = BorderStroke(1.dp, SageGreen)
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
             ) {
                 Column(
                     modifier = Modifier
@@ -137,8 +132,8 @@ fun BusinessCardScreen(
                         modifier = Modifier
                             .size(80.dp)
                             .clip(CircleShape)
-                            .background(PaleMint)
-                            .border(2.dp, ForestGreen, CircleShape),
+                            .background(MaterialTheme.colorScheme.surface)
+                            .border(2.dp, MaterialTheme.colorScheme.primary, CircleShape),
                         contentAlignment = Alignment.Center
                     ) {
                         if (businessLogoUrl.isNotEmpty()) {
@@ -155,7 +150,7 @@ fun BusinessCardScreen(
                                 imageVector = Icons.Filled.Store,
                                 contentDescription = "Business Logo",
                                 modifier = Modifier.size(36.dp),
-                                tint = ForestGreen
+                                tint = MaterialTheme.colorScheme.primary
                             )
                         }
                     }
@@ -167,7 +162,7 @@ fun BusinessCardScreen(
                         text = businessName.ifEmpty { "Your Business" },
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold,
-                        color = DeepSlate
+                        color = MaterialTheme.colorScheme.onSurface
                     )
 
                     if (gstin.isNotEmpty()) {
@@ -175,12 +170,12 @@ fun BusinessCardScreen(
                         Text(
                             text = "GSTIN: $gstin",
                             style = MaterialTheme.typography.bodyMedium,
-                            color = SageGreen
+                            color = MaterialTheme.colorScheme.outline
                         )
                     }
 
                     Spacer(modifier = Modifier.height(16.dp))
-                    HorizontalDivider(color = SageGreen.copy(alpha = 0.3f))
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f))
                     Spacer(modifier = Modifier.height(16.dp))
 
                     // Contact Info
@@ -197,14 +192,14 @@ fun BusinessCardScreen(
                     }
 
                     Spacer(modifier = Modifier.height(16.dp))
-                    HorizontalDivider(color = SageGreen.copy(alpha = 0.3f))
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f))
                     Spacer(modifier = Modifier.height(12.dp))
 
                     // Footer
                     Text(
                         text = "Powered by MyManager",
                         style = MaterialTheme.typography.labelSmall,
-                        color = SageGreen
+                        color = MaterialTheme.colorScheme.outline
                     )
                 }
             }
@@ -214,7 +209,7 @@ fun BusinessCardScreen(
             Text(
                 text = "Tap the share button to send your business card",
                 style = MaterialTheme.typography.bodySmall,
-                color = DeepSlate.copy(alpha = 0.6f)
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
@@ -232,13 +227,13 @@ private fun CardRow(
         Icon(
             imageVector = icon,
             contentDescription = null,
-            tint = ForestGreen,
+            tint = MaterialTheme.colorScheme.primary,
             modifier = Modifier.size(20.dp)
         )
         Text(
             text = value,
             style = MaterialTheme.typography.bodyMedium,
-            color = DeepSlate
+            color = MaterialTheme.colorScheme.onSurface
         )
     }
 }

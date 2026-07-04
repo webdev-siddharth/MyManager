@@ -35,11 +35,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.core2studio.mymanager.data.local.entity.Client
 import com.core2studio.mymanager.data.local.entity.Order
-import com.core2studio.mymanager.theme.DeepSlate
-import com.core2studio.mymanager.theme.ForestGreen
-import com.core2studio.mymanager.theme.MintCream
-import com.core2studio.mymanager.theme.SageGreen
-import com.core2studio.mymanager.theme.White
 import com.core2studio.mymanager.ui.components.EmptyState
 import com.core2studio.mymanager.ui.components.MyManagerCard
 import com.core2studio.mymanager.ui.components.MyManagerTopBar
@@ -77,7 +72,7 @@ fun ClientDetailScreen(
             )
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },
-        containerColor = MintCream
+        containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
         LazyColumn(
             modifier = Modifier
@@ -95,7 +90,7 @@ fun ClientDetailScreen(
                         Text(
                             text = client.name,
                             style = MaterialTheme.typography.headlineSmall,
-                            color = DeepSlate
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                         Spacer(modifier = Modifier.height(12.dp))
 
@@ -107,12 +102,12 @@ fun ClientDetailScreen(
                                 Icon(
                                     imageVector = Icons.Filled.Phone,
                                     contentDescription = null,
-                                    tint = SageGreen
+                                    tint = MaterialTheme.colorScheme.outline
                                 )
                                 Text(
                                     text = client.phone,
                                     style = MaterialTheme.typography.bodyLarge,
-                                    color = DeepSlate
+                                    color = MaterialTheme.colorScheme.onSurface
                                 )
                             }
                             Spacer(modifier = Modifier.height(4.dp))
@@ -126,12 +121,12 @@ fun ClientDetailScreen(
                                 Icon(
                                     imageVector = Icons.Filled.Email,
                                     contentDescription = null,
-                                    tint = SageGreen
+                                    tint = MaterialTheme.colorScheme.outline
                                 )
                                 Text(
                                     text = client.email,
                                     style = MaterialTheme.typography.bodyLarge,
-                                    color = DeepSlate
+                                    color = MaterialTheme.colorScheme.onSurface
                                 )
                             }
                             Spacer(modifier = Modifier.height(4.dp))
@@ -145,12 +140,12 @@ fun ClientDetailScreen(
                                 Icon(
                                     imageVector = Icons.Filled.LocationOn,
                                     contentDescription = null,
-                                    tint = SageGreen
+                                    tint = MaterialTheme.colorScheme.outline
                                 )
                                 Text(
                                     text = client.address,
                                     style = MaterialTheme.typography.bodyLarge,
-                                    color = DeepSlate
+                                    color = MaterialTheme.colorScheme.onSurface
                                 )
                             }
                         }
@@ -164,7 +159,7 @@ fun ClientDetailScreen(
                 Text(
                     text = "Order History",
                     style = MaterialTheme.typography.titleMedium,
-                    color = DeepSlate
+                    color = MaterialTheme.colorScheme.onSurface
                 )
             }
 
@@ -185,7 +180,7 @@ fun ClientDetailScreen(
                         ) {
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
-                                    text = "₹${
+                                    text = "\u20B9${
                                         String.format(
                                             Locale.getDefault(),
                                             "%.2f",
@@ -193,11 +188,11 @@ fun ClientDetailScreen(
                                         )
                                     }",
                                     style = MaterialTheme.typography.titleMedium,
-                                    color = ForestGreen
+                                    color = MaterialTheme.colorScheme.primary
                                 )
                                 if (order.paidAmount < order.amount) {
                                     Text(
-                                        text = "Paid: ₹${
+                                        text = "Paid: \u20B9${
                                             String.format(
                                                 Locale.getDefault(),
                                                 "%.2f",
@@ -205,14 +200,14 @@ fun ClientDetailScreen(
                                             )
                                         }",
                                         style = MaterialTheme.typography.bodyMedium,
-                                        color = DeepSlate.copy(alpha = 0.6f)
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 }
                                 Spacer(modifier = Modifier.height(2.dp))
                                 Text(
                                     text = dateFormatter.format(Date(order.date)),
                                     style = MaterialTheme.typography.labelMedium,
-                                    color = DeepSlate.copy(alpha = 0.5f)
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
                             Column(horizontalAlignment = Alignment.End) {
@@ -223,8 +218,8 @@ fun ClientDetailScreen(
                                 Button(
                                     onClick = { onGenerateInvoice(order) },
                                     colors = ButtonDefaults.buttonColors(
-                                        containerColor = ForestGreen,
-                                        contentColor = White
+                                        containerColor = MaterialTheme.colorScheme.primary,
+                                        contentColor = MaterialTheme.colorScheme.onPrimary
                                     ),
                                     elevation = ButtonDefaults.buttonElevation(
                                         defaultElevation = 0.dp,

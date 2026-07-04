@@ -36,10 +36,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.core2studio.mymanager.theme.DeepSlate
-import com.core2studio.mymanager.theme.ForestGreen
-import com.core2studio.mymanager.theme.PaleMint
-import com.core2studio.mymanager.theme.White
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -95,7 +91,7 @@ fun OrderFilterBottomSheet(
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
-        containerColor = White
+        containerColor = MaterialTheme.colorScheme.surface
     ) {
         Column(
             modifier = Modifier
@@ -106,7 +102,7 @@ fun OrderFilterBottomSheet(
             Text(
                 text = "Filter Orders",
                 style = MaterialTheme.typography.titleLarge,
-                color = DeepSlate,
+                color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.padding(bottom = 16.dp)
             )
 
@@ -114,7 +110,7 @@ fun OrderFilterBottomSheet(
             Text(
                 text = "Status",
                 style = MaterialTheme.typography.titleMedium,
-                color = DeepSlate,
+                color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.padding(bottom = 8.dp)
             )
             FlowRow(
@@ -127,14 +123,14 @@ fun OrderFilterBottomSheet(
                         onClick = { tempStatus = status },
                         label = { Text(text = status) },
                         colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = ForestGreen,
-                            selectedLabelColor = White,
-                            containerColor = PaleMint,
-                            labelColor = DeepSlate
+                            selectedContainerColor = MaterialTheme.colorScheme.primary,
+                            selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
+                            containerColor = MaterialTheme.colorScheme.surface,
+                            labelColor = MaterialTheme.colorScheme.onSurface
                         ),
                         border = FilterChipDefaults.filterChipBorder(
-                            borderColor = ForestGreen,
-                            selectedBorderColor = ForestGreen,
+                            borderColor = MaterialTheme.colorScheme.primary,
+                            selectedBorderColor = MaterialTheme.colorScheme.primary,
                             enabled = true,
                             selected = tempStatus == status
                         )
@@ -148,7 +144,7 @@ fun OrderFilterBottomSheet(
             Text(
                 text = "Date",
                 style = MaterialTheme.typography.titleMedium,
-                color = DeepSlate,
+                color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.padding(bottom = 8.dp)
             )
             FlowRow(
@@ -167,14 +163,14 @@ fun OrderFilterBottomSheet(
                         },
                         label = { Text(text = option.label) },
                         colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = ForestGreen,
-                            selectedLabelColor = White,
-                            containerColor = PaleMint,
-                            labelColor = DeepSlate
+                            selectedContainerColor = MaterialTheme.colorScheme.primary,
+                            selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
+                            containerColor = MaterialTheme.colorScheme.surface,
+                            labelColor = MaterialTheme.colorScheme.onSurface
                         ),
                         border = FilterChipDefaults.filterChipBorder(
-                            borderColor = ForestGreen,
-                            selectedBorderColor = ForestGreen,
+                            borderColor = MaterialTheme.colorScheme.primary,
+                            selectedBorderColor = MaterialTheme.colorScheme.primary,
                             enabled = true,
                             selected = tempDateOption == option
                         )
@@ -192,14 +188,14 @@ fun OrderFilterBottomSheet(
                             Text(
                                 text = "Start Date",
                                 style = MaterialTheme.typography.labelMedium,
-                                color = DeepSlate.copy(alpha = 0.7f),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.padding(bottom = 4.dp)
                             )
                             OutlinedButton(
                                 onClick = { showStartDatePicker = true },
                                 modifier = Modifier.fillMaxWidth(),
                                 colors = ButtonDefaults.outlinedButtonColors(
-                                    contentColor = ForestGreen
+                                    contentColor = MaterialTheme.colorScheme.primary
                                 )
                             ) {
                                 Text(
@@ -215,14 +211,14 @@ fun OrderFilterBottomSheet(
                             Text(
                                 text = "End Date",
                                 style = MaterialTheme.typography.labelMedium,
-                                color = DeepSlate.copy(alpha = 0.7f),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.padding(bottom = 4.dp)
                             )
                             OutlinedButton(
                                 onClick = { showEndDatePicker = true },
                                 modifier = Modifier.fillMaxWidth(),
                                 colors = ButtonDefaults.outlinedButtonColors(
-                                    contentColor = ForestGreen
+                                    contentColor = MaterialTheme.colorScheme.primary
                                 )
                             ) {
                                 Text(
@@ -244,7 +240,7 @@ fun OrderFilterBottomSheet(
             Text(
                 text = "Price",
                 style = MaterialTheme.typography.titleMedium,
-                color = DeepSlate,
+                color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.padding(bottom = 8.dp)
             )
             priceSortOptions.forEach { option ->
@@ -259,14 +255,14 @@ fun OrderFilterBottomSheet(
                         selected = tempPriceSort == option,
                         onClick = { tempPriceSort = option },
                         colors = RadioButtonDefaults.colors(
-                            selectedColor = ForestGreen,
-                            unselectedColor = DeepSlate.copy(alpha = 0.5f)
+                            selectedColor = MaterialTheme.colorScheme.primary,
+                            unselectedColor = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     )
                     Text(
                         text = option.label,
                         style = MaterialTheme.typography.bodyMedium,
-                        color = DeepSlate,
+                        color = MaterialTheme.colorScheme.onSurface,
                         modifier = Modifier.padding(start = 4.dp)
                     )
                 }
@@ -290,7 +286,7 @@ fun OrderFilterBottomSheet(
                     },
                     modifier = Modifier.weight(1f),
                     colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = ForestGreen
+                        contentColor = MaterialTheme.colorScheme.primary
                     )
                 ) {
                     Text(text = "Reset")
@@ -310,8 +306,8 @@ fun OrderFilterBottomSheet(
                     },
                     modifier = Modifier.weight(1f),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = ForestGreen,
-                        contentColor = White
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary
                     )
                 ) {
                     Text(text = "Apply")
@@ -336,12 +332,12 @@ fun OrderFilterBottomSheet(
                         showStartDatePicker = false
                     }
                 ) {
-                    Text("OK", color = ForestGreen)
+                    Text("OK", color = MaterialTheme.colorScheme.primary)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showStartDatePicker = false }) {
-                    Text("Cancel", color = DeepSlate)
+                    Text("Cancel", color = MaterialTheme.colorScheme.onSurface)
                 }
             }
         ) {
@@ -362,12 +358,12 @@ fun OrderFilterBottomSheet(
                         showEndDatePicker = false
                     }
                 ) {
-                    Text("OK", color = ForestGreen)
+                    Text("OK", color = MaterialTheme.colorScheme.primary)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showEndDatePicker = false }) {
-                    Text("Cancel", color = DeepSlate)
+                    Text("Cancel", color = MaterialTheme.colorScheme.onSurface)
                 }
             }
         ) {

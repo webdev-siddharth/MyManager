@@ -40,12 +40,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.core2studio.mymanager.data.local.entity.CartItem
-import com.core2studio.mymanager.theme.DeepSlate
-import com.core2studio.mymanager.theme.ErrorRed
-import com.core2studio.mymanager.theme.ForestGreen
-import com.core2studio.mymanager.theme.MintCream
-import com.core2studio.mymanager.theme.PaleMint
-import com.core2studio.mymanager.theme.White
+
 import com.core2studio.mymanager.ui.components.EmptyState
 import com.core2studio.mymanager.ui.components.MyManagerTopBar
 import java.util.Locale
@@ -70,14 +65,14 @@ fun CartScreen(
                             Icon(
                                 imageVector = Icons.Filled.Share,
                                 contentDescription = "Share cart",
-                                tint = ForestGreen
+                                tint = MaterialTheme.colorScheme.primary
                             )
                         }
                     }
                 }
             )
         },
-        containerColor = MintCream
+        containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
         if (uiState.cartItems.isEmpty()) {
             EmptyState(
@@ -128,13 +123,13 @@ fun CartScreen(
                             text = "Total",
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
-                            color = DeepSlate
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
                             text = "₹${String.format(Locale.getDefault(), "%.2f", uiState.cartTotal)}",
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
-                            color = ForestGreen
+                            color = MaterialTheme.colorScheme.primary
                         )
                     }
 
@@ -146,8 +141,8 @@ fun CartScreen(
                             .fillMaxWidth()
                             .height(52.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = ForestGreen,
-                            contentColor = White
+                            containerColor = MaterialTheme.colorScheme.primary,
+                            contentColor = MaterialTheme.colorScheme.onPrimary
                         ),
                         shape = RoundedCornerShape(12.dp)
                     ) {
@@ -173,7 +168,7 @@ private fun CartItemCard(
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = PaleMint),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         shape = RoundedCornerShape(12.dp)
     ) {
         Row(
@@ -199,13 +194,13 @@ private fun CartItemCard(
                 Text(
                     text = cartItem.productName,
                     style = MaterialTheme.typography.bodyLarge,
-                    color = DeepSlate,
+                    color = MaterialTheme.colorScheme.onSurface,
                     fontWeight = FontWeight.Medium
                 )
                 Text(
                     text = "₹${String.format(Locale.getDefault(), "%.2f", cartItem.price)} each",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = DeepSlate.copy(alpha = 0.7f)
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 
@@ -218,14 +213,14 @@ private fun CartItemCard(
                         Icon(
                             imageVector = Icons.Filled.Remove,
                             contentDescription = "Decrease quantity",
-                            tint = ForestGreen,
+                            tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(18.dp)
                         )
                     }
                     Text(
                         text = "${cartItem.quantity}",
                         style = MaterialTheme.typography.bodyLarge,
-                        color = DeepSlate,
+                        color = MaterialTheme.colorScheme.onSurface,
                         modifier = Modifier.padding(horizontal = 8.dp)
                     )
                     IconButton(
@@ -235,7 +230,7 @@ private fun CartItemCard(
                         Icon(
                             imageVector = Icons.Filled.Add,
                             contentDescription = "Increase quantity",
-                            tint = ForestGreen,
+                            tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(18.dp)
                         )
                     }
@@ -243,7 +238,7 @@ private fun CartItemCard(
                 Text(
                     text = "₹${String.format(Locale.getDefault(), "%.2f", cartItem.price * cartItem.quantity)}",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = ForestGreen,
+                    color = MaterialTheme.colorScheme.primary,
                     fontWeight = FontWeight.SemiBold
                 )
             }
@@ -255,7 +250,7 @@ private fun CartItemCard(
                 Icon(
                     imageVector = Icons.Filled.Delete,
                     contentDescription = "Remove item",
-                    tint = ErrorRed,
+                    tint = MaterialTheme.colorScheme.error,
                     modifier = Modifier.size(18.dp)
                 )
             }

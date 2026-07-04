@@ -53,17 +53,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
-import com.core2studio.mymanager.theme.DeepSlate
-import com.core2studio.mymanager.theme.ErrorRed
-import com.core2studio.mymanager.theme.ForestGreen
-import com.core2studio.mymanager.theme.MintCream
-import com.core2studio.mymanager.theme.SageGreen
-import com.core2studio.mymanager.theme.White
+
 import com.core2studio.mymanager.ui.components.MyManagerCard
 import com.core2studio.mymanager.ui.components.MyManagerTopBar
 
@@ -128,10 +122,10 @@ fun BusinessInfoScreen(
     }
 
     val textFieldColors = OutlinedTextFieldDefaults.colors(
-        focusedBorderColor = ForestGreen,
-        unfocusedBorderColor = SageGreen,
-        cursorColor = ForestGreen,
-        focusedLabelColor = ForestGreen
+        focusedBorderColor = MaterialTheme.colorScheme.primary,
+        unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+        cursorColor = MaterialTheme.colorScheme.primary,
+        focusedLabelColor = MaterialTheme.colorScheme.primary
     )
 
     Scaffold(
@@ -152,7 +146,7 @@ fun BusinessInfoScreen(
                 }
             )
         },
-        containerColor = MintCream
+        containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
         Column(
             modifier = Modifier
@@ -178,8 +172,8 @@ fun BusinessInfoScreen(
                         modifier = Modifier
                             .size(120.dp)
                             .clip(CircleShape)
-                            .background(PaleMint)
-                            .border(2.dp, SageGreen, CircleShape),
+                            .background(MaterialTheme.colorScheme.surface)
+                            .border(2.dp, MaterialTheme.colorScheme.outline, CircleShape),
                         contentAlignment = Alignment.Center
                     ) {
                         if (businessLogoUrl.isNotEmpty()) {
@@ -196,14 +190,14 @@ fun BusinessInfoScreen(
                                 imageVector = Icons.Filled.Store,
                                 contentDescription = "Business Logo",
                                 modifier = Modifier.size(48.dp),
-                                tint = SageGreen
+                                tint = MaterialTheme.colorScheme.outline
                             )
                         }
 
                         if (isUploadingLogo) {
                             CircularProgressIndicator(
                                 modifier = Modifier.size(48.dp),
-                                color = ForestGreen
+                                color = MaterialTheme.colorScheme.primary
                             )
                         }
                     }
@@ -216,12 +210,12 @@ fun BusinessInfoScreen(
                                 .align(Alignment.BottomEnd)
                                 .size(36.dp)
                                 .clip(CircleShape)
-                                .background(ForestGreen)
+                                .background(MaterialTheme.colorScheme.primary)
                         ) {
                             Icon(
                                 imageVector = Icons.Filled.Edit,
                                 contentDescription = "Change logo",
-                                tint = White,
+                                tint = MaterialTheme.colorScheme.onPrimary,
                                 modifier = Modifier.size(18.dp)
                             )
                         }
@@ -239,12 +233,12 @@ fun BusinessInfoScreen(
                         Icon(
                             imageVector = Icons.Filled.Edit,
                             contentDescription = null,
-                            tint = ForestGreen
+                            tint = MaterialTheme.colorScheme.primary
                         )
                         Text(
                             text = "Edit Details",
                             style = MaterialTheme.typography.titleMedium,
-                            color = DeepSlate
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                     }
                     Spacer(modifier = Modifier.height(12.dp))
@@ -312,8 +306,8 @@ fun BusinessInfoScreen(
                     },
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = ForestGreen,
-                        contentColor = White
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary
                     ),
                     elevation = ButtonDefaults.buttonElevation(0.dp, 0.dp),
                     shape = RoundedCornerShape(12.dp)
@@ -330,12 +324,12 @@ fun BusinessInfoScreen(
                         Icon(
                             imageVector = Icons.Filled.Business,
                             contentDescription = null,
-                            tint = ForestGreen
+                            tint = MaterialTheme.colorScheme.primary
                         )
                         Text(
                             text = "Business Details",
                             style = MaterialTheme.typography.titleMedium,
-                            color = DeepSlate
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                     }
                     Spacer(modifier = Modifier.height(12.dp))
@@ -366,7 +360,7 @@ fun BusinessInfoScreen(
                         Text(
                             text = "No business info added yet. Tap Edit to add your details.",
                             style = MaterialTheme.typography.bodyMedium,
-                            color = DeepSlate.copy(alpha = 0.6f)
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -375,8 +369,8 @@ fun BusinessInfoScreen(
                     onClick = onViewBusinessCard,
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = ForestGreen,
-                        contentColor = White
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary
                     ),
                     elevation = ButtonDefaults.buttonElevation(0.dp, 0.dp),
                     shape = RoundedCornerShape(12.dp)
@@ -392,7 +386,7 @@ fun BusinessInfoScreen(
                 OutlinedButton(
                     onClick = { isEditMode = true },
                     modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = ForestGreen),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary),
                     shape = RoundedCornerShape(12.dp)
                 ) {
                     Icon(
@@ -424,20 +418,20 @@ fun BusinessInfoScreen(
                             )
                         )
                     }) {
-                        Text("Gallery", color = ForestGreen)
+                        Text("Gallery", color = MaterialTheme.colorScheme.primary)
                     }
                     TextButton(onClick = {
                         showImageSourceDialog = false
                         cameraPermissionLauncher.launch(android.Manifest.permission.CAMERA)
                     }) {
-                        Text("Camera", color = ForestGreen)
+                        Text("Camera", color = MaterialTheme.colorScheme.primary)
                     }
                     if (businessLogoUrl.isNotEmpty()) {
                         TextButton(onClick = {
                             showImageSourceDialog = false
                             showDeleteLogoDialog = true
                         }) {
-                            Text("Remove", color = ErrorRed)
+                            Text("Remove", color = MaterialTheme.colorScheme.error)
                         }
                     }
                 }
@@ -458,9 +452,9 @@ fun BusinessInfoScreen(
                         onClearLogo()
                         showDeleteLogoDialog = false
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = ErrorRed)
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
                 ) {
-                    Text("Remove", color = White)
+                    Text("Remove", color = MaterialTheme.colorScheme.onPrimary)
                 }
             },
             dismissButton = {
@@ -485,22 +479,21 @@ private fun InfoRow(
         Icon(
             imageVector = icon,
             contentDescription = null,
-            tint = SageGreen,
+            tint = MaterialTheme.colorScheme.outline,
             modifier = Modifier.padding(top = 2.dp)
         )
         Column {
             Text(
                 text = label,
                 style = MaterialTheme.typography.labelMedium,
-                color = SageGreen
+                color = MaterialTheme.colorScheme.outline
             )
             Text(
                 text = value,
                 style = MaterialTheme.typography.bodyLarge,
-                color = DeepSlate
+                color = MaterialTheme.colorScheme.onSurface
             )
         }
     }
 }
 
-private val PaleMint = com.core2studio.mymanager.theme.PaleMint

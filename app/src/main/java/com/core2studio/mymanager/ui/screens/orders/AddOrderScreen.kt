@@ -44,13 +44,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.core2studio.mymanager.data.local.entity.Client
-import com.core2studio.mymanager.theme.DeepSlate
-import com.core2studio.mymanager.theme.ErrorRed
-import com.core2studio.mymanager.theme.ForestGreen
-import com.core2studio.mymanager.theme.MintCream
-import com.core2studio.mymanager.theme.PaleMint
-import com.core2studio.mymanager.theme.SageGreen
-import com.core2studio.mymanager.theme.White
 import com.core2studio.mymanager.ui.components.MyManagerTopBar
 import com.core2studio.mymanager.ui.screens.clients.AddClientDialog
 
@@ -91,10 +84,10 @@ fun AddOrderScreen(
     var amountError by remember { mutableStateOf(false) }
 
     val textFieldColors = OutlinedTextFieldDefaults.colors(
-        focusedBorderColor = ForestGreen,
-        unfocusedBorderColor = SageGreen,
-        cursorColor = ForestGreen,
-        focusedLabelColor = ForestGreen
+        focusedBorderColor = MaterialTheme.colorScheme.primary,
+        unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+        cursorColor = MaterialTheme.colorScheme.primary,
+        focusedLabelColor = MaterialTheme.colorScheme.primary
     )
 
     Scaffold(
@@ -104,7 +97,7 @@ fun AddOrderScreen(
                 onBackClick = onBack
             )
         },
-        containerColor = MintCream
+        containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
         Column(
             modifier = Modifier
@@ -150,7 +143,7 @@ fun AddOrderScreen(
                     }
                     HorizontalDivider()
                     DropdownMenuItem(
-                        text = { Text("+ Create New Client", color = ForestGreen) },
+                        text = { Text("+ Create New Client", color = MaterialTheme.colorScheme.primary) },
                         onClick = {
                             clientMenuExpanded = false
                             showAddClientDialog = true
@@ -161,7 +154,7 @@ fun AddOrderScreen(
                             text = {
                                 Text(
                                     "No clients available",
-                                    color = DeepSlate.copy(alpha = 0.5f)
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             },
                             onClick = { clientMenuExpanded = false }
@@ -185,7 +178,7 @@ fun AddOrderScreen(
             Text(
                 text = "Status",
                 style = MaterialTheme.typography.bodyLarge,
-                color = DeepSlate
+                color = MaterialTheme.colorScheme.onSurface
             )
             Row(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -205,14 +198,14 @@ fun AddOrderScreen(
                         },
                         label = { Text(status) },
                         colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = ForestGreen,
-                            selectedLabelColor = White,
-                            containerColor = PaleMint,
-                            labelColor = DeepSlate
+                            selectedContainerColor = MaterialTheme.colorScheme.primary,
+                            selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
+                            containerColor = MaterialTheme.colorScheme.surface,
+                            labelColor = MaterialTheme.colorScheme.onSurface
                         ),
                         border = FilterChipDefaults.filterChipBorder(
-                            borderColor = ForestGreen,
-                            selectedBorderColor = ForestGreen,
+                            borderColor = MaterialTheme.colorScheme.primary,
+                            selectedBorderColor = MaterialTheme.colorScheme.primary,
                             enabled = true,
                             selected = selectedStatus == status
                         )
@@ -248,7 +241,7 @@ fun AddOrderScreen(
                 supportingText = if (amountError) {
                     { Text("Valid amount is required") }
                 } else null,
-                prefix = { Text("₹") },
+                prefix = { Text("\u20B9") },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                 colors = textFieldColors
             )
@@ -262,16 +255,16 @@ fun AddOrderScreen(
                 label = { Text("Advance Paid Amount") },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
-                prefix = { Text("₹") },
+                prefix = { Text("\u20B9") },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = ForestGreen,
-                    unfocusedBorderColor = SageGreen,
-                    cursorColor = ForestGreen,
-                    focusedLabelColor = ForestGreen,
-                    disabledTextColor = DeepSlate,
-                    disabledBorderColor = SageGreen,
-                    disabledLabelColor = SageGreen
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                    cursorColor = MaterialTheme.colorScheme.primary,
+                    focusedLabelColor = MaterialTheme.colorScheme.primary,
+                    disabledTextColor = MaterialTheme.colorScheme.onSurface,
+                    disabledBorderColor = MaterialTheme.colorScheme.outline,
+                    disabledLabelColor = MaterialTheme.colorScheme.outline
                 )
             )
 
@@ -279,7 +272,7 @@ fun AddOrderScreen(
             Text(
                 text = "Custom Fields",
                 style = MaterialTheme.typography.bodyLarge,
-                color = DeepSlate
+                color = MaterialTheme.colorScheme.onSurface
             )
 
             customFieldKeys.forEachIndexed { index, key ->
@@ -313,7 +306,7 @@ fun AddOrderScreen(
                         Icon(
                             imageVector = Icons.Filled.Close,
                             contentDescription = "Remove field",
-                            tint = ErrorRed
+                            tint = MaterialTheme.colorScheme.error
                         )
                     }
                 }
@@ -325,7 +318,7 @@ fun AddOrderScreen(
                     customFieldValues.add("")
                 },
                 colors = ButtonDefaults.outlinedButtonColors(
-                    contentColor = ForestGreen
+                    contentColor = MaterialTheme.colorScheme.primary
                 )
             ) {
                 Icon(
@@ -384,8 +377,8 @@ fun AddOrderScreen(
                     .fillMaxWidth()
                     .height(52.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = ForestGreen,
-                    contentColor = White
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
                 ),
                 shape = RoundedCornerShape(12.dp),
                 elevation = ButtonDefaults.buttonElevation(
@@ -396,7 +389,7 @@ fun AddOrderScreen(
                 Text(
                     text = "Save Order",
                     style = MaterialTheme.typography.bodyLarge,
-                    color = White
+                    color = MaterialTheme.colorScheme.onPrimary
                 )
             }
 

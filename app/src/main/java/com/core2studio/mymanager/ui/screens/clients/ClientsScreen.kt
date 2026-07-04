@@ -19,9 +19,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.core2studio.mymanager.data.local.entity.Client
-import com.core2studio.mymanager.theme.DeepSlate
-import com.core2studio.mymanager.theme.MintCream
-import com.core2studio.mymanager.theme.SageGreen
 import com.core2studio.mymanager.ui.components.EmptyState
 import com.core2studio.mymanager.ui.components.MyManagerCard
 import com.core2studio.mymanager.ui.components.MyManagerFAB
@@ -47,7 +44,7 @@ fun ClientsScreen(
                 text = "New Client"
             )
         },
-        containerColor = MintCream
+        containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
         if (clients.isEmpty()) {
             com.core2studio.mymanager.ui.components.EmptyState(
@@ -77,7 +74,7 @@ fun ClientsScreen(
                         Text(
                             text = client.name,
                             style = MaterialTheme.typography.titleMedium,
-                            color = DeepSlate
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         if (client.phone.isNotBlank()) {
@@ -85,13 +82,13 @@ fun ClientsScreen(
                                 androidx.compose.material3.Icon(
                                     imageVector = Icons.Filled.Phone,
                                     contentDescription = null,
-                                    tint = SageGreen,
+                                    tint = MaterialTheme.colorScheme.outline,
                                     modifier = Modifier.height(16.dp)
                                 )
                                 Text(
                                     text = client.phone,
                                     style = MaterialTheme.typography.bodyMedium,
-                                    color = DeepSlate.copy(alpha = 0.7f)
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
                         }
@@ -100,13 +97,13 @@ fun ClientsScreen(
                                 androidx.compose.material3.Icon(
                                     imageVector = Icons.Filled.Email,
                                     contentDescription = null,
-                                    tint = SageGreen,
+                                    tint = MaterialTheme.colorScheme.outline,
                                     modifier = Modifier.height(16.dp)
                                 )
                                 Text(
                                     text = client.email,
                                     style = MaterialTheme.typography.bodyMedium,
-                                    color = DeepSlate.copy(alpha = 0.7f)
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
                         }

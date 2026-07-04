@@ -49,13 +49,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.core2studio.mymanager.data.local.entity.Client
-import com.core2studio.mymanager.theme.DeepSlate
-import com.core2studio.mymanager.theme.ErrorRed
-import com.core2studio.mymanager.theme.ForestGreen
-import com.core2studio.mymanager.theme.MintCream
-import com.core2studio.mymanager.theme.PaleMint
-import com.core2studio.mymanager.theme.SageGreen
-import com.core2studio.mymanager.theme.White
+
 import com.core2studio.mymanager.ui.components.MyManagerTopBar
 import com.core2studio.mymanager.ui.screens.clients.AddClientDialog
 import java.util.Locale
@@ -85,10 +79,10 @@ fun CheckoutScreen(
     val customFieldValues = remember { mutableStateListOf<String>() }
 
     val textFieldColors = OutlinedTextFieldDefaults.colors(
-        focusedBorderColor = ForestGreen,
-        unfocusedBorderColor = SageGreen,
-        cursorColor = ForestGreen,
-        focusedLabelColor = ForestGreen
+        focusedBorderColor = MaterialTheme.colorScheme.primary,
+        unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+        cursorColor = MaterialTheme.colorScheme.primary,
+        focusedLabelColor = MaterialTheme.colorScheme.primary
     )
 
     LaunchedEffect(uiState.checkoutSuccess) {
@@ -110,7 +104,7 @@ fun CheckoutScreen(
                         onBack()
                     }
                 ) {
-                    Text("OK", color = ForestGreen)
+                    Text("OK", color = MaterialTheme.colorScheme.primary)
                 }
             }
         )
@@ -133,7 +127,7 @@ fun CheckoutScreen(
                 onBackClick = onBack
             )
         },
-        containerColor = MintCream
+        containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
         Column(
             modifier = Modifier
@@ -179,7 +173,7 @@ fun CheckoutScreen(
                     }
                     HorizontalDivider()
                     DropdownMenuItem(
-                        text = { Text("+ Create New Client", color = ForestGreen) },
+                        text = { Text("+ Create New Client", color = MaterialTheme.colorScheme.primary) },
                         onClick = {
                             clientMenuExpanded = false
                             showAddClientDialog = true
@@ -190,7 +184,7 @@ fun CheckoutScreen(
                             text = {
                                 Text(
                                     "No clients available",
-                                    color = DeepSlate.copy(alpha = 0.5f)
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             },
                             onClick = { clientMenuExpanded = false }
@@ -204,7 +198,7 @@ fun CheckoutScreen(
                 text = "Order Summary",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                color = DeepSlate
+                color = MaterialTheme.colorScheme.onSurface
             )
 
             uiState.cartItems.forEach { item ->
@@ -215,17 +209,17 @@ fun CheckoutScreen(
                     Text(
                         text = "${item.productName} x${item.quantity}",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = DeepSlate
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
                         text = "₹${String.format(Locale.getDefault(), "%.2f", item.price * item.quantity)}",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = DeepSlate
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                 }
             }
 
-            HorizontalDivider(color = ForestGreen.copy(alpha = 0.3f))
+            HorizontalDivider(color = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -235,13 +229,13 @@ fun CheckoutScreen(
                     text = "Total",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = DeepSlate
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
                     text = "₹${String.format(Locale.getDefault(), "%.2f", uiState.cartTotal)}",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = ForestGreen
+                    color = MaterialTheme.colorScheme.primary
                 )
             }
 
@@ -249,7 +243,7 @@ fun CheckoutScreen(
             Text(
                 text = "Status",
                 style = MaterialTheme.typography.bodyLarge,
-                color = DeepSlate
+                color = MaterialTheme.colorScheme.onSurface
             )
             Row(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -268,14 +262,14 @@ fun CheckoutScreen(
                         },
                         label = { Text(status) },
                         colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = ForestGreen,
-                            selectedLabelColor = White,
-                            containerColor = PaleMint,
-                            labelColor = DeepSlate
+                            selectedContainerColor = MaterialTheme.colorScheme.primary,
+                            selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
+                            containerColor = MaterialTheme.colorScheme.surface,
+                            labelColor = MaterialTheme.colorScheme.onSurface
                         ),
                         border = FilterChipDefaults.filterChipBorder(
-                            borderColor = ForestGreen,
-                            selectedBorderColor = ForestGreen,
+                            borderColor = MaterialTheme.colorScheme.primary,
+                            selectedBorderColor = MaterialTheme.colorScheme.primary,
                             enabled = true,
                             selected = selectedStatus == status
                         )
@@ -295,13 +289,13 @@ fun CheckoutScreen(
                 prefix = { Text("₹") },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = ForestGreen,
-                    unfocusedBorderColor = SageGreen,
-                    cursorColor = ForestGreen,
-                    focusedLabelColor = ForestGreen,
-                    disabledTextColor = DeepSlate,
-                    disabledBorderColor = SageGreen,
-                    disabledLabelColor = SageGreen
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                    cursorColor = MaterialTheme.colorScheme.primary,
+                    focusedLabelColor = MaterialTheme.colorScheme.primary,
+                    disabledTextColor = MaterialTheme.colorScheme.onSurface,
+                    disabledBorderColor = MaterialTheme.colorScheme.outline,
+                    disabledLabelColor = MaterialTheme.colorScheme.outline
                 )
             )
 
@@ -309,7 +303,7 @@ fun CheckoutScreen(
             Text(
                 text = "Custom Fields",
                 style = MaterialTheme.typography.bodyLarge,
-                color = DeepSlate
+                color = MaterialTheme.colorScheme.onSurface
             )
 
             customFieldKeys.forEachIndexed { index, key ->
@@ -343,7 +337,7 @@ fun CheckoutScreen(
                         Icon(
                             imageVector = Icons.Filled.Close,
                             contentDescription = "Remove field",
-                            tint = ErrorRed
+                            tint = MaterialTheme.colorScheme.error
                         )
                     }
                 }
@@ -355,7 +349,7 @@ fun CheckoutScreen(
                     customFieldValues.add("")
                 },
                 colors = ButtonDefaults.outlinedButtonColors(
-                    contentColor = ForestGreen
+                    contentColor = MaterialTheme.colorScheme.primary
                 )
             ) {
                 Icon(
@@ -407,8 +401,8 @@ fun CheckoutScreen(
                     .fillMaxWidth()
                     .height(52.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = ForestGreen,
-                    contentColor = White
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
                 ),
                 shape = RoundedCornerShape(12.dp),
                 elevation = ButtonDefaults.buttonElevation(
@@ -419,7 +413,7 @@ fun CheckoutScreen(
                 Text(
                     text = "Place Order",
                     style = MaterialTheme.typography.bodyLarge,
-                    color = White
+                    color = MaterialTheme.colorScheme.onPrimary
                 )
             }
 

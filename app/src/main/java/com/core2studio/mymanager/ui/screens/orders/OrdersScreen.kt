@@ -36,10 +36,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.core2studio.mymanager.data.local.entity.Order
-import com.core2studio.mymanager.theme.DeepSlate
-import com.core2studio.mymanager.theme.ForestGreen
-import com.core2studio.mymanager.theme.MintCream
-import com.core2studio.mymanager.theme.White
 import com.core2studio.mymanager.ui.components.EmptyState
 import com.core2studio.mymanager.ui.components.MyManagerCard
 import com.core2studio.mymanager.ui.components.MyManagerFAB
@@ -90,8 +86,8 @@ fun OrdersScreen(
                         badge = {
                             if (filterState.isActive) {
                                 Badge(
-                                    containerColor = ForestGreen,
-                                    contentColor = White
+                                    containerColor = MaterialTheme.colorScheme.primary,
+                                    contentColor = MaterialTheme.colorScheme.onPrimary
                                 ) {
                                     Text("!")
                                 }
@@ -102,7 +98,7 @@ fun OrdersScreen(
                             Icon(
                                 imageVector = Icons.Filled.FilterList,
                                 contentDescription = "Filter",
-                                tint = DeepSlate
+                                tint = MaterialTheme.colorScheme.onSurface
                             )
                         }
                     }
@@ -116,7 +112,7 @@ fun OrdersScreen(
                 text = "New Order"
             )
         },
-        containerColor = MintCream
+        containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
         Column(
             modifier = Modifier
@@ -156,11 +152,11 @@ fun OrdersScreen(
                                     Text(
                                         text = clientNameResolver(order.clientId),
                                         style = MaterialTheme.typography.bodyLarge,
-                                        color = DeepSlate
+                                        color = MaterialTheme.colorScheme.onSurface
                                     )
                                     Spacer(modifier = Modifier.height(4.dp))
                                     Text(
-                                        text = "₹${
+                                        text = "\u20B9${
                                             String.format(
                                                 Locale.getDefault(),
                                                 "%.2f",
@@ -168,11 +164,11 @@ fun OrdersScreen(
                                             )
                                         }",
                                         style = MaterialTheme.typography.titleMedium,
-                                        color = ForestGreen
+                                        color = MaterialTheme.colorScheme.primary
                                     )
                                     if (order.paidAmount < order.amount) {
                                         Text(
-                                            text = "Paid: ₹${
+                                            text = "Paid: \u20B9${
                                                 String.format(
                                                     Locale.getDefault(),
                                                     "%.2f",
@@ -180,14 +176,14 @@ fun OrdersScreen(
                                                 )
                                             }",
                                             style = MaterialTheme.typography.labelMedium,
-                                            color = DeepSlate.copy(alpha = 0.6f)
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
                                         )
                                     }
                                     Spacer(modifier = Modifier.height(2.dp))
                                     Text(
                                         text = dateFormatter.format(Date(order.date)),
                                         style = MaterialTheme.typography.labelMedium,
-                                        color = DeepSlate.copy(alpha = 0.6f)
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 }
                                 Spacer(modifier = Modifier.width(8.dp))
@@ -205,7 +201,7 @@ fun OrdersScreen(
                                             Icon(
                                                 imageVector = Icons.Filled.MoreVert,
                                                 contentDescription = "More options",
-                                                tint = ForestGreen
+                                                tint = MaterialTheme.colorScheme.primary
                                             )
                                         }
 
@@ -224,7 +220,7 @@ fun OrdersScreen(
                                                     Icon(
                                                         imageVector = Icons.Filled.Edit,
                                                         contentDescription = null,
-                                                        tint = ForestGreen
+                                                        tint = MaterialTheme.colorScheme.primary
                                                     )
                                                 }
                                             )

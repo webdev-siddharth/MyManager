@@ -22,11 +22,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.core2studio.mymanager.data.local.entity.Order
-import com.core2studio.mymanager.theme.DeepSlate
-import com.core2studio.mymanager.theme.ForestGreen
-import com.core2studio.mymanager.theme.MintCream
-import com.core2studio.mymanager.theme.PaleMint
-import com.core2studio.mymanager.theme.White
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -45,14 +40,14 @@ fun OrderDetailDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        containerColor = MintCream,
+        containerColor = MaterialTheme.colorScheme.background,
         shape = RoundedCornerShape(12.dp),
         tonalElevation = 0.dp,
         title = {
             Text(
                 text = "Order Details",
                 style = MaterialTheme.typography.titleLarge,
-                color = DeepSlate
+                color = MaterialTheme.colorScheme.onSurface
             )
         },
         text = {
@@ -62,35 +57,35 @@ fun OrderDetailDialog(
                 Text(
                     text = clientName,
                     style = MaterialTheme.typography.titleMedium,
-                    color = ForestGreen
+                    color = MaterialTheme.colorScheme.primary
                 )
                 if (order.productName.isNotBlank()) {
                     Text(
                         text = "Product: ${order.productName}",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = DeepSlate
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                 }
                 Text(
-                    text = "Amount: ₹${String.format(Locale.getDefault(), "%.2f", order.amount)}",
+                    text = "Amount: \u20B9${String.format(Locale.getDefault(), "%.2f", order.amount)}",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = DeepSlate
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
-                    text = "Paid: ₹${String.format(Locale.getDefault(), "%.2f", order.paidAmount)}",
+                    text = "Paid: \u20B9${String.format(Locale.getDefault(), "%.2f", order.paidAmount)}",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = DeepSlate
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
                     text = "Date: ${dateFormatter.format(Date(order.date))}",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = DeepSlate
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 if (order.notes.isNotBlank()) {
                     Text(
                         text = "Notes: ${order.notes}",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = DeepSlate.copy(alpha = 0.7f)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
 
@@ -98,7 +93,7 @@ fun OrderDetailDialog(
                 Text(
                     text = "Update Status",
                     style = MaterialTheme.typography.bodyLarge,
-                    color = DeepSlate
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -109,14 +104,14 @@ fun OrderDetailDialog(
                             onClick = { selectedStatus = status },
                             label = { Text(status) },
                             colors = FilterChipDefaults.filterChipColors(
-                                selectedContainerColor = ForestGreen,
-                                selectedLabelColor = White,
-                                containerColor = PaleMint,
-                                labelColor = DeepSlate
+                                selectedContainerColor = MaterialTheme.colorScheme.primary,
+                                selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
+                                containerColor = MaterialTheme.colorScheme.surface,
+                                labelColor = MaterialTheme.colorScheme.onSurface
                             ),
                             border = FilterChipDefaults.filterChipBorder(
-                                borderColor = ForestGreen,
-                                selectedBorderColor = ForestGreen,
+                                borderColor = MaterialTheme.colorScheme.primary,
+                                selectedBorderColor = MaterialTheme.colorScheme.primary,
                                 enabled = true,
                                 selected = selectedStatus == status
                             )
@@ -138,8 +133,8 @@ fun OrderDetailDialog(
                     onDismiss()
                 },
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = ForestGreen,
-                    contentColor = White
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
                 ),
                 elevation = ButtonDefaults.buttonElevation(
                     defaultElevation = 0.dp,
@@ -153,7 +148,7 @@ fun OrderDetailDialog(
             OutlinedButton(
                 onClick = onDismiss,
                 colors = ButtonDefaults.outlinedButtonColors(
-                    contentColor = ForestGreen
+                    contentColor = MaterialTheme.colorScheme.primary
                 )
             ) {
                 Text("Cancel")

@@ -46,12 +46,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
-import com.core2studio.mymanager.theme.DeepSlate
-import com.core2studio.mymanager.theme.ErrorRed
-import com.core2studio.mymanager.theme.ForestGreen
-import com.core2studio.mymanager.theme.MintCream
-import com.core2studio.mymanager.theme.SageGreen
-import com.core2studio.mymanager.theme.White
+
 import com.core2studio.mymanager.ui.components.MyManagerCard
 import com.core2studio.mymanager.ui.components.MyManagerTopBar
 
@@ -75,10 +70,10 @@ fun UserProfileScreen(
     }
 
     val textFieldColors = OutlinedTextFieldDefaults.colors(
-        focusedBorderColor = ForestGreen,
-        unfocusedBorderColor = SageGreen,
-        cursorColor = ForestGreen,
-        focusedLabelColor = ForestGreen
+        focusedBorderColor = MaterialTheme.colorScheme.primary,
+        unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+        cursorColor = MaterialTheme.colorScheme.primary,
+        focusedLabelColor = MaterialTheme.colorScheme.primary
     )
 
     val userInitial = displayName.firstOrNull()?.uppercase() ?: "U"
@@ -97,7 +92,7 @@ fun UserProfileScreen(
                 }
             )
         },
-        containerColor = MintCream
+        containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
         Column(
             modifier = Modifier
@@ -118,15 +113,15 @@ fun UserProfileScreen(
                     modifier = Modifier
                         .size(100.dp)
                         .clip(CircleShape)
-                        .background(ForestGreen)
-                        .border(3.dp, White, CircleShape),
+                        .background(MaterialTheme.colorScheme.primary)
+                        .border(3.dp, MaterialTheme.colorScheme.onPrimary, CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
                         text = userInitial,
                         style = MaterialTheme.typography.headlineLarge,
                         fontWeight = FontWeight.Bold,
-                        color = White
+                        color = MaterialTheme.colorScheme.onPrimary
                     )
                 }
             }
@@ -141,12 +136,12 @@ fun UserProfileScreen(
                         Icon(
                             imageVector = Icons.Filled.Edit,
                             contentDescription = null,
-                            tint = ForestGreen
+                            tint = MaterialTheme.colorScheme.primary
                         )
                         Text(
                             text = "Edit Details",
                             style = MaterialTheme.typography.titleMedium,
-                            color = DeepSlate
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                     }
                     Spacer(modifier = Modifier.height(12.dp))
@@ -167,10 +162,10 @@ fun UserProfileScreen(
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true,
                         colors = OutlinedTextFieldDefaults.colors(
-                            disabledBorderColor = SageGreen,
-                            disabledLabelColor = SageGreen.copy(alpha = 0.6f),
-                            disabledTextColor = DeepSlate,
-                            disabledPlaceholderColor = DeepSlate.copy(alpha = 0.4f)
+                            disabledBorderColor = MaterialTheme.colorScheme.outline,
+                            disabledLabelColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.6f),
+                            disabledTextColor = MaterialTheme.colorScheme.onSurface,
+                            disabledPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant
                         ),
                         enabled = false
                     )
@@ -183,8 +178,8 @@ fun UserProfileScreen(
                     },
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = ForestGreen,
-                        contentColor = White
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary
                     ),
                     elevation = ButtonDefaults.buttonElevation(0.dp, 0.dp),
                     shape = RoundedCornerShape(12.dp)
@@ -201,12 +196,12 @@ fun UserProfileScreen(
                         Icon(
                             imageVector = Icons.Filled.Person,
                             contentDescription = null,
-                            tint = ForestGreen
+                            tint = MaterialTheme.colorScheme.primary
                         )
                         Text(
                             text = "Account Details",
                             style = MaterialTheme.typography.titleMedium,
-                            color = DeepSlate
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                     }
                     Spacer(modifier = Modifier.height(12.dp))
@@ -224,7 +219,7 @@ fun UserProfileScreen(
                             style = MaterialTheme.typography.bodyMedium,
                             color = if (message.contains("failed", ignoreCase = true) ||
                                 message.contains("incorrect", ignoreCase = true)
-                            ) ErrorRed else ForestGreen
+                            ) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
                         )
                     }
                 }
@@ -233,7 +228,7 @@ fun UserProfileScreen(
                 OutlinedButton(
                     onClick = { isEditMode = true },
                     modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = ForestGreen),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary),
                     shape = RoundedCornerShape(12.dp)
                 ) {
                     Icon(
@@ -248,7 +243,7 @@ fun UserProfileScreen(
                 OutlinedButton(
                     onClick = { showPasswordDialog = true },
                     modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = ForestGreen),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary),
                     shape = RoundedCornerShape(12.dp)
                 ) {
                     Icon(
@@ -296,10 +291,10 @@ private fun ChangePasswordDialog(
     val displayError = error ?: serverError
 
     val textFieldColors = OutlinedTextFieldDefaults.colors(
-        focusedBorderColor = ForestGreen,
-        unfocusedBorderColor = SageGreen,
-        cursorColor = ForestGreen,
-        focusedLabelColor = ForestGreen
+        focusedBorderColor = MaterialTheme.colorScheme.primary,
+        unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+        cursorColor = MaterialTheme.colorScheme.primary,
+        focusedLabelColor = MaterialTheme.colorScheme.primary
     )
 
     AlertDialog(
@@ -341,7 +336,7 @@ private fun ChangePasswordDialog(
                     Text(
                         text = displayError,
                         style = MaterialTheme.typography.bodySmall,
-                        color = ErrorRed
+                        color = MaterialTheme.colorScheme.error
                     )
                 }
                 if (isLoading) {
@@ -349,7 +344,7 @@ private fun ChangePasswordDialog(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.Center
                     ) {
-                        CircularProgressIndicator(color = ForestGreen)
+                        CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
                     }
                 }
             }
@@ -368,7 +363,7 @@ private fun ChangePasswordDialog(
                 },
                 enabled = !isLoading
             ) {
-                Text("Update", color = ForestGreen)
+                Text("Update", color = MaterialTheme.colorScheme.primary)
             }
         },
         dismissButton = {
@@ -392,19 +387,19 @@ private fun InfoRow(
         Icon(
             imageVector = icon,
             contentDescription = null,
-            tint = SageGreen,
+            tint = MaterialTheme.colorScheme.outline,
             modifier = Modifier.padding(top = 2.dp)
         )
         Column {
             Text(
                 text = label,
                 style = MaterialTheme.typography.labelMedium,
-                color = SageGreen
+                color = MaterialTheme.colorScheme.outline
             )
             Text(
                 text = value,
                 style = MaterialTheme.typography.bodyLarge,
-                color = DeepSlate
+                color = MaterialTheme.colorScheme.onSurface
             )
         }
     }
