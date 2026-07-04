@@ -23,7 +23,8 @@ data class SettingsUiState(
     val gstin: String = "",
     val accountEmail: String? = null,
     val message: String? = null,
-    val isUploadingLogo: Boolean = false
+    val isUploadingLogo: Boolean = false,
+    val themeMode: Int = 0
 )
 
 class SettingsViewModel(
@@ -67,7 +68,9 @@ class SettingsViewModel(
             businessAddress = userPrefs.getString(KEY_BUSINESS_ADDRESS, "") ?: "",
             businessLogoUrl = userPrefs.getString(KEY_BUSINESS_LOGO_URL, "") ?: "",
             gstin = userPrefs.getString(KEY_BUSINESS_GSTIN, "") ?: "",
-            accountEmail = authRepository.userEmail
+            accountEmail = authRepository.userEmail,
+            themeMode = context.getSharedPreferences("mymanager_theme", Context.MODE_PRIVATE)
+                .getInt("theme_mode", 0)
         )
 
         viewModelScope.launch {
@@ -187,5 +190,13 @@ class SettingsViewModel(
 
     fun clearMessage() {
         _uiState.value = _uiState.value.copy(message = null)
+    }
+
+    fun saveThemeMode(mode: Int) {
+        _uiState.value = _uiState.value.copy(themeMode = mode)
+        context.getSharedPreferences("mymanager_theme", Context.MODE_PRIVATE)
+            .edit()
+            .putInt("theme_mode", mode)
+            .apply()
     }
 }

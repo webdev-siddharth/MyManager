@@ -18,23 +18,23 @@ import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.CloudDone
 import androidx.compose.material.icons.filled.CloudOff
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Store
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.core2studio.mymanager.theme.DeepSlate
-import com.core2studio.mymanager.theme.ErrorRed
-import com.core2studio.mymanager.theme.ForestGreen
-import com.core2studio.mymanager.theme.MintCream
-import com.core2studio.mymanager.theme.SageGreen
 import com.core2studio.mymanager.ui.components.MyManagerCard
 import com.core2studio.mymanager.ui.components.MyManagerTopBar
 
@@ -44,14 +44,16 @@ fun SettingsScreen(
     onProfileClick: () -> Unit = {},
     accountEmail: String? = null,
     message: String? = null,
-    onSignOutApp: () -> Unit = {}
+    onSignOutApp: () -> Unit = {},
+    themeMode: Int = 0,
+    onThemeModeSelected: (Int) -> Unit = {}
 ) {
 
     Scaffold(
         topBar = {
             com.core2studio.mymanager.ui.components.MyManagerTopBar(title = "Account")
         },
-        containerColor = MintCream
+        containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
         Column(
             modifier = Modifier
@@ -72,12 +74,12 @@ fun SettingsScreen(
                     Icon(
                         imageVector = if (accountEmail != null) Icons.Filled.CloudDone else Icons.Filled.CloudOff,
                         contentDescription = null,
-                        tint = if (accountEmail != null) ForestGreen else SageGreen
+                        tint = if (accountEmail != null) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline
                     )
                     Text(
                         text = "Google Account",
                         style = MaterialTheme.typography.titleMedium,
-                        color = DeepSlate
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                 }
                 Spacer(modifier = Modifier.height(8.dp))
@@ -86,14 +88,14 @@ fun SettingsScreen(
                     Text(
                         text = accountEmail,
                         style = MaterialTheme.typography.bodyMedium,
-                        color = SageGreen
+                        color = MaterialTheme.colorScheme.outline
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                 } else {
                     Text(
                         text = "Not signed in",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = DeepSlate.copy(alpha = 0.6f)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -109,12 +111,12 @@ fun SettingsScreen(
                     Icon(
                         imageVector = Icons.Filled.Person,
                         contentDescription = null,
-                        tint = ForestGreen
+                        tint = MaterialTheme.colorScheme.primary
                     )
                     Text(
                         text = "Profile",
                         style = MaterialTheme.typography.titleMedium,
-                        color = DeepSlate
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                 }
             }
@@ -130,17 +132,72 @@ fun SettingsScreen(
                     Icon(
                         imageVector = Icons.Filled.Store,
                         contentDescription = null,
-                        tint = ForestGreen
+                        tint = MaterialTheme.colorScheme.primary
                     )
                     Text(
                         text = "Business Info",
                         style = MaterialTheme.typography.titleMedium,
-                        color = DeepSlate
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                 }
             }
 
+            // Settings Section
+            com.core2studio.mymanager.ui.components.MyManagerCard {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Settings,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                    Text(
+                        text = "Settings",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
 
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Palette,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                    Text(
+                        text = "Appearance",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+                    SegmentedButton(
+                        selected = themeMode == 0,
+                        onClick = { onThemeModeSelected(0) },
+                        shape = SegmentedButtonDefaults.itemShape(index = 0, count = 3)
+                    ) { Text("System") }
+                    SegmentedButton(
+                        selected = themeMode == 1,
+                        onClick = { onThemeModeSelected(1) },
+                        shape = SegmentedButtonDefaults.itemShape(index = 1, count = 3)
+                    ) { Text("Light") }
+                    SegmentedButton(
+                        selected = themeMode == 2,
+                        onClick = { onThemeModeSelected(2) },
+                        shape = SegmentedButtonDefaults.itemShape(index = 2, count = 3)
+                    ) { Text("Dark") }
+                }
+            }
 
             // Message display
             AnimatedVisibility(visible = message != null) {
@@ -152,7 +209,7 @@ fun SettingsScreen(
                                 "failed",
                                 ignoreCase = true
                             ) == true
-                        ) ErrorRed else ForestGreen
+                        ) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
                     )
                 }
             }
@@ -166,24 +223,24 @@ fun SettingsScreen(
                     Icon(
                         imageVector = Icons.Filled.Info,
                         contentDescription = null,
-                        tint = SageGreen
+                        tint = MaterialTheme.colorScheme.outline
                     )
                     Text(
                         text = "About",
                         style = MaterialTheme.typography.titleMedium,
-                        color = DeepSlate
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                 }
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
                     text = "MyManager",
                     style = MaterialTheme.typography.bodyLarge,
-                    color = DeepSlate
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
                     text = "A business management app for business owners.",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = DeepSlate.copy(alpha = 0.6f)
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 
@@ -196,19 +253,19 @@ fun SettingsScreen(
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.Logout,
                         contentDescription = null,
-                        tint = ErrorRed
+                        tint = MaterialTheme.colorScheme.error
                     )
                     Text(
                         text = "Account",
                         style = MaterialTheme.typography.titleMedium,
-                        color = DeepSlate
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                 }
                 Spacer(modifier = Modifier.height(8.dp))
                 OutlinedButton(
                     onClick = onSignOutApp,
                     modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = ErrorRed),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error),
                     shape = RoundedCornerShape(12.dp)
                 ) {
                     Icon(imageVector = Icons.AutoMirrored.Filled.Logout, contentDescription = null)

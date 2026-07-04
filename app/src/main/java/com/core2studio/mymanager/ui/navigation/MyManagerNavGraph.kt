@@ -12,6 +12,7 @@ import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.Receipt
 import androidx.compose.material.icons.filled.ManageAccounts
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
@@ -35,10 +36,6 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.core2studio.mymanager.MyManagerViewModelFactory
-import com.core2studio.mymanager.theme.ForestGreen
-import com.core2studio.mymanager.theme.LightGray
-import com.core2studio.mymanager.theme.MintCream
-import com.core2studio.mymanager.theme.PaleMint
 import com.core2studio.mymanager.ui.screens.auth.AuthViewModel
 import com.core2studio.mymanager.ui.screens.auth.EmailVerificationScreen
 import com.core2studio.mymanager.ui.screens.auth.LoginScreen
@@ -226,11 +223,11 @@ private fun MainContent(
     val showBottomBar = currentRoute in com.core2studio.mymanager.ui.navigation.bottomNavRoutes
 
     Scaffold(
-        containerColor = MintCream,
+        containerColor = MaterialTheme.colorScheme.background,
         bottomBar = {
             if (showBottomBar) {
                 NavigationBar(
-                    containerColor = PaleMint,
+                    containerColor = MaterialTheme.colorScheme.surface,
                     tonalElevation = 0.dp
                 ) {
                     com.core2studio.mymanager.ui.navigation.bottomNavItems.forEach { item ->
@@ -254,11 +251,11 @@ private fun MainContent(
                             },
                             label = { Text(text = item.label) },
                             colors = NavigationBarItemDefaults.colors(
-                                selectedIconColor = ForestGreen,
-                                selectedTextColor = ForestGreen,
-                                unselectedIconColor = LightGray,
-                                unselectedTextColor = LightGray,
-                                indicatorColor = PaleMint
+                                selectedIconColor = MaterialTheme.colorScheme.primary,
+                                selectedTextColor = MaterialTheme.colorScheme.primary,
+                                unselectedIconColor = MaterialTheme.colorScheme.outlineVariant,
+                                unselectedTextColor = MaterialTheme.colorScheme.outlineVariant,
+                                indicatorColor = MaterialTheme.colorScheme.surface
                             )
                         )
                     }
@@ -521,7 +518,9 @@ private fun MainContent(
                     onSignOutApp = {
                         settingsViewModel.signOut()
                         authViewModel.signOut()
-                    }
+                    },
+                    themeMode = uiState.themeMode,
+                    onThemeModeSelected = { settingsViewModel.saveThemeMode(it) }
                 )
             }
 
