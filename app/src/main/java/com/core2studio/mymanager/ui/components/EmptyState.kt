@@ -18,9 +18,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.core2studio.mymanager.theme.ForestGreen
-import com.core2studio.mymanager.theme.LightGray
-import com.core2studio.mymanager.theme.White
 
 @Composable
 fun EmptyState(
@@ -40,21 +37,21 @@ fun EmptyState(
             imageVector = Icons.Outlined.Inbox,
             contentDescription = null,
             modifier = Modifier.size(64.dp),
-            tint = LightGray
+            tint = MaterialTheme.colorScheme.outlineVariant
         )
         Spacer(modifier = Modifier.height(16.dp))
         Text(
             text = message,
             style = MaterialTheme.typography.bodyLarge,
-            color = LightGray
+            color = MaterialTheme.colorScheme.outlineVariant
         )
         if (actionLabel != null && onAction != null) {
             Spacer(modifier = Modifier.height(16.dp))
             Button(
                 onClick = onAction,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = ForestGreen,
-                    contentColor = White
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
                 ),
                 elevation = ButtonDefaults.buttonElevation(
                     defaultElevation = 0.dp,

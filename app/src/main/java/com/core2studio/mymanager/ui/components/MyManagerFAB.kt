@@ -4,13 +4,12 @@ import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
-import com.core2studio.mymanager.theme.ForestGreen
-import com.core2studio.mymanager.theme.White
 
 @Composable
 fun MyManagerFAB(
@@ -23,8 +22,8 @@ fun MyManagerFAB(
         ExtendedFloatingActionButton(
             onClick = onClick,
             modifier = modifier,
-            containerColor = ForestGreen,
-            contentColor = White,
+            containerColor = MaterialTheme.colorScheme.primary,
+            contentColor = MaterialTheme.colorScheme.onPrimary,
             elevation = FloatingActionButtonDefaults.elevation(
                 defaultElevation = 0.dp,
                 pressedElevation = 0.dp,
@@ -35,13 +34,13 @@ fun MyManagerFAB(
                 Icon(
                     imageVector = icon,
                     contentDescription = null,
-                    tint = White
+                    tint = MaterialTheme.colorScheme.onPrimary
                 )
             },
             text = {
                 Text(
                     text = text,
-                    color = White
+                    color = MaterialTheme.colorScheme.onPrimary
                 )
             }
         )
@@ -49,8 +48,8 @@ fun MyManagerFAB(
         FloatingActionButton(
             onClick = onClick,
             modifier = modifier,
-            containerColor = ForestGreen,
-            contentColor = White,
+            containerColor = MaterialTheme.colorScheme.primary,
+            contentColor = MaterialTheme.colorScheme.onPrimary,
             elevation = FloatingActionButtonDefaults.elevation(
                 defaultElevation = 0.dp,
                 pressedElevation = 0.dp,
@@ -61,7 +60,7 @@ fun MyManagerFAB(
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                tint = White
+                tint = MaterialTheme.colorScheme.onPrimary
             )
         }
     }

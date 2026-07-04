@@ -3,16 +3,13 @@ package com.core2studio.mymanager.ui.components
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.core2studio.mymanager.theme.DeepSlate
-import com.core2studio.mymanager.theme.LimeAccent
-import com.core2studio.mymanager.theme.SageGreen
-import com.core2studio.mymanager.theme.White
 
 @Composable
 fun StatusChip(
@@ -20,19 +17,19 @@ fun StatusChip(
     modifier: Modifier = Modifier
 ) {
     val backgroundColor = when (status.uppercase()) {
-        "COMPLETED" -> LimeAccent
-        "PARTIAL" -> SageGreen
-        else -> White // PENDING
+        "COMPLETED" -> MaterialTheme.colorScheme.tertiary
+        "PARTIAL" -> MaterialTheme.colorScheme.secondary
+        else -> MaterialTheme.colorScheme.surface // PENDING
     }
 
     val textColor = when (status.uppercase()) {
-        "COMPLETED" -> White
-        "PARTIAL" -> White
-        else -> DeepSlate // PENDING
+        "COMPLETED" -> MaterialTheme.colorScheme.onTertiary
+        "PARTIAL" -> MaterialTheme.colorScheme.onSecondary
+        else -> MaterialTheme.colorScheme.onSurface // PENDING
     }
 
     val border = when (status.uppercase()) {
-        "PENDING" -> BorderStroke(1.dp, DeepSlate)
+        "PENDING" -> BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface)
         else -> null
     }
 
