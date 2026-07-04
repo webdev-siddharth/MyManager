@@ -18,7 +18,6 @@ import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.CloudDone
 import androidx.compose.material.icons.filled.CloudOff
 import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Store
@@ -27,9 +26,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SegmentedButton
-import androidx.compose.material3.SegmentedButtonDefaults
-import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -42,11 +38,10 @@ import com.core2studio.mymanager.ui.components.MyManagerTopBar
 fun SettingsScreen(
     onBusinessInfoClick: () -> Unit = {},
     onProfileClick: () -> Unit = {},
+    onSettingsClick: () -> Unit = {},
     accountEmail: String? = null,
     message: String? = null,
-    onSignOutApp: () -> Unit = {},
-    themeMode: Int = 0,
-    onThemeModeSelected: (Int) -> Unit = {}
+    onSignOutApp: () -> Unit = {}
 ) {
 
     Scaffold(
@@ -143,7 +138,9 @@ fun SettingsScreen(
             }
 
             // Settings Section
-            com.core2studio.mymanager.ui.components.MyManagerCard {
+            com.core2studio.mymanager.ui.components.MyManagerCard(
+                onClick = onSettingsClick
+            ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -158,44 +155,6 @@ fun SettingsScreen(
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.onSurface
                     )
-                }
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.Palette,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                    Text(
-                        text = "Appearance",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
-                    SegmentedButton(
-                        selected = themeMode == 0,
-                        onClick = { onThemeModeSelected(0) },
-                        shape = SegmentedButtonDefaults.itemShape(index = 0, count = 3)
-                    ) { Text("System") }
-                    SegmentedButton(
-                        selected = themeMode == 1,
-                        onClick = { onThemeModeSelected(1) },
-                        shape = SegmentedButtonDefaults.itemShape(index = 1, count = 3)
-                    ) { Text("Light") }
-                    SegmentedButton(
-                        selected = themeMode == 2,
-                        onClick = { onThemeModeSelected(2) },
-                        shape = SegmentedButtonDefaults.itemShape(index = 2, count = 3)
-                    ) { Text("Dark") }
                 }
             }
 

@@ -513,14 +513,22 @@ private fun MainContent(
                 com.core2studio.mymanager.ui.screens.settings.SettingsScreen(
                     onBusinessInfoClick = { navController.navigate("business_info") },
                     onProfileClick = { navController.navigate("user_profile") },
+                    onSettingsClick = { navController.navigate("app_settings") },
                     accountEmail = uiState.accountEmail,
                     message = uiState.message,
                     onSignOutApp = {
                         settingsViewModel.signOut()
                         authViewModel.signOut()
-                    },
+                    }
+                )
+            }
+
+            composable("app_settings") {
+                val uiState by settingsViewModel.uiState.collectAsState()
+                com.core2studio.mymanager.ui.screens.settings.AppSettingsScreen(
                     themeMode = uiState.themeMode,
-                    onThemeModeSelected = { settingsViewModel.saveThemeMode(it) }
+                    onThemeModeSelected = { settingsViewModel.saveThemeMode(it) },
+                    onBack = { navController.popBackStack() }
                 )
             }
 
