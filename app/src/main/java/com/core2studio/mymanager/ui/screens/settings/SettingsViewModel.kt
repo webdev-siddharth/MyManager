@@ -194,6 +194,8 @@ class SettingsViewModel(
 
     fun saveThemeMode(mode: Int) {
         _uiState.value = _uiState.value.copy(themeMode = mode)
+        val app = context.applicationContext as com.core2studio.mymanager.MyManagerApplication
+        app.themeMode.intValue = mode
         context.getSharedPreferences("mymanager_theme", Context.MODE_PRIVATE)
             .edit()
             .putInt("theme_mode", mode)

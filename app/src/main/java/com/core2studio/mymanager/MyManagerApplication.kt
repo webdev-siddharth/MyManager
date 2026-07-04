@@ -1,7 +1,9 @@
 package com.core2studio.mymanager
 
 import android.app.Application
+import android.content.Context
 import android.util.Log
+import androidx.compose.runtime.mutableIntStateOf
 import com.core2studio.mymanager.data.auth.AuthRepository
 import com.core2studio.mymanager.data.auth.UserProfileRepository
 import com.core2studio.mymanager.data.firestore.FirestoreCategoryRepository
@@ -112,8 +114,16 @@ class MyManagerApplication : Application() {
         )
     }
 
+    val themeMode = mutableIntStateOf(0)
+
+    fun loadThemeMode() {
+        val prefs = getSharedPreferences("mymanager_theme", Context.MODE_PRIVATE)
+        themeMode.intValue = prefs.getInt("theme_mode", 0)
+    }
+
     override fun onCreate() {
         super.onCreate()
+        loadThemeMode()
         try {
             FirebaseApp.initializeApp(this)
             Log.i("MyManager", "Firebase initialized successfully")
