@@ -37,10 +37,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.core2studio.mymanager.theme.DeepSlate
-import com.core2studio.mymanager.theme.ForestGreen
-import com.core2studio.mymanager.theme.SageGreen
-import com.core2studio.mymanager.theme.White
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -53,10 +49,10 @@ fun ForgotPasswordScreen(
     var email by remember { mutableStateOf(initialEmail) }
 
     val textFieldColors = OutlinedTextFieldDefaults.colors(
-        focusedBorderColor = ForestGreen,
-        unfocusedBorderColor = SageGreen,
-        cursorColor = ForestGreen,
-        focusedLabelColor = ForestGreen
+        focusedBorderColor = MaterialTheme.colorScheme.primary,
+        unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+        cursorColor = MaterialTheme.colorScheme.primary,
+        focusedLabelColor = MaterialTheme.colorScheme.primary
     )
 
     Column(
@@ -82,7 +78,7 @@ fun ForgotPasswordScreen(
         Text(
             text = "Enter your email address and we'll send you a link to reset your password.",
             style = MaterialTheme.typography.bodyLarge,
-            color = DeepSlate.copy(alpha = 0.7f),
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
             textAlign = TextAlign.Center
         )
 
@@ -92,7 +88,7 @@ fun ForgotPasswordScreen(
             value = email,
             onValueChange = { email = it },
             label = { Text("Email") },
-            leadingIcon = { Icon(Icons.Filled.Email, contentDescription = null, tint = SageGreen) },
+            leadingIcon = { Icon(Icons.Filled.Email, contentDescription = null, tint = MaterialTheme.colorScheme.outline) },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
             colors = textFieldColors,
@@ -103,7 +99,7 @@ fun ForgotPasswordScreen(
             Spacer(modifier = Modifier.height(16.dp))
             Text(
                 text = message,
-                color = ForestGreen,
+                color = MaterialTheme.colorScheme.primary,
                 style = MaterialTheme.typography.bodyMedium,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth()
@@ -118,13 +114,13 @@ fun ForgotPasswordScreen(
                 .fillMaxWidth()
                 .height(50.dp),
             enabled = !state.isLoading,
-            colors = ButtonDefaults.buttonColors(containerColor = ForestGreen, contentColor = White),
+            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary, contentColor = MaterialTheme.colorScheme.onPrimary),
             shape = RoundedCornerShape(12.dp)
         ) {
             if (state.isLoading) {
                 CircularProgressIndicator(
                     modifier = Modifier.size(24.dp),
-                    color = White,
+                    color = MaterialTheme.colorScheme.onPrimary,
                     strokeWidth = 2.dp
                 )
             } else {
@@ -137,7 +133,7 @@ fun ForgotPasswordScreen(
         Text(
             text = "Back to Sign In",
             style = MaterialTheme.typography.bodyMedium,
-            color = ForestGreen,
+            color = MaterialTheme.colorScheme.primary,
             fontWeight = FontWeight.SemiBold,
             modifier = Modifier.clickable(enabled = !state.isLoading) {
                 viewModel.clearPasswordResetMessage()

@@ -36,12 +36,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.core2studio.mymanager.theme.ForestGreen
 import com.core2studio.mymanager.data.local.entity.Category
-import com.core2studio.mymanager.theme.DeepSlate
-import com.core2studio.mymanager.theme.ForestGreen
-import com.core2studio.mymanager.theme.MintCream
-import com.core2studio.mymanager.theme.SageGreen
 import com.core2studio.mymanager.ui.components.EmptyState
 import com.core2studio.mymanager.ui.components.MyManagerCard
 import com.core2studio.mymanager.ui.components.MyManagerFAB
@@ -81,7 +76,7 @@ fun CategoriesScreen(
                             Icon(
                                 imageVector = Icons.Filled.ShoppingCart,
                                 contentDescription = "Cart",
-                                tint = ForestGreen
+                                tint = MaterialTheme.colorScheme.primary
                             )
                         }
                     }
@@ -95,7 +90,7 @@ fun CategoriesScreen(
                 text = "Add Category"
             )
         },
-        containerColor = MintCream
+        containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
         if (categories.isEmpty()) {
             com.core2studio.mymanager.ui.components.EmptyState(
@@ -126,7 +121,7 @@ fun CategoriesScreen(
                             Text(
                                 text = category.name,
                                 style = MaterialTheme.typography.titleMedium,
-                                color = DeepSlate,
+                                color = MaterialTheme.colorScheme.onSurface,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis
                             )
@@ -134,7 +129,7 @@ fun CategoriesScreen(
                             Text(
                                 text = category.description,
                                 style = MaterialTheme.typography.bodyMedium,
-                                color = DeepSlate.copy(alpha = 0.7f),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 maxLines = 2,
                                 overflow = TextOverflow.Ellipsis
                             )
@@ -142,7 +137,7 @@ fun CategoriesScreen(
                             Text(
                                 text = "${productCountResolver(category.id)} products",
                                 style = MaterialTheme.typography.labelMedium,
-                                color = SageGreen
+                                color = MaterialTheme.colorScheme.outline
                             )
                         }
 
@@ -153,7 +148,7 @@ fun CategoriesScreen(
                             Icon(
                                 imageVector = Icons.Filled.MoreVert,
                                 contentDescription = "More options",
-                                tint = DeepSlate
+                                tint = MaterialTheme.colorScheme.onSurface
                             )
                         }
 
@@ -171,12 +166,12 @@ fun CategoriesScreen(
                                     Icon(
                                         imageVector = Icons.Filled.Edit,
                                         contentDescription = null,
-                                        tint = ForestGreen
+                                        tint = MaterialTheme.colorScheme.primary
                                     )
                                 }
                             )
                             DropdownMenuItem(
-                                text = { Text("Delete", color = androidx.compose.ui.graphics.Color.Red) },
+                                text = { Text("Delete", color = MaterialTheme.colorScheme.error) },
                                 onClick = {
                                     expandedCategoryId = null
                                     showDeleteDialog = category
@@ -185,7 +180,7 @@ fun CategoriesScreen(
                                     Icon(
                                         imageVector = Icons.Filled.Delete,
                                         contentDescription = null,
-                                        tint = androidx.compose.ui.graphics.Color.Red
+                                        tint = MaterialTheme.colorScheme.error
                                     )
                                 }
                             )
@@ -226,7 +221,7 @@ fun CategoriesScreen(
                         onDeleteCategory(category)
                         showDeleteDialog = null
                     }) {
-                        Text("Delete", color = androidx.compose.ui.graphics.Color.Red)
+                        Text("Delete", color = MaterialTheme.colorScheme.error)
                     }
                 },
                 dismissButton = {

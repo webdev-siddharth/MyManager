@@ -45,13 +45,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
-import com.core2studio.mymanager.theme.DeepSlate
-import com.core2studio.mymanager.theme.ForestGreen
-import com.core2studio.mymanager.theme.LightGray
-import com.core2studio.mymanager.theme.MintCream
-import com.core2studio.mymanager.theme.PaleMint
-import com.core2studio.mymanager.theme.SageGreen
-import com.core2studio.mymanager.theme.White
 import com.core2studio.mymanager.ui.components.MyManagerTopBar
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -81,7 +74,7 @@ fun AddProductScreen(
                 onBackClick = onBack
             )
         },
-        containerColor = MintCream
+        containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
         Column(
             modifier = Modifier
@@ -97,7 +90,7 @@ fun AddProductScreen(
                     .fillMaxWidth()
                     .aspectRatio(1.5f)
                     .clip(RoundedCornerShape(12.dp))
-                    .background(PaleMint)
+                    .background(MaterialTheme.colorScheme.surface)
                     .clickable {
                         photoPickerLauncher.launch(
                             PickVisualMediaRequest(
@@ -124,13 +117,13 @@ fun AddProductScreen(
                             imageVector = Icons.Filled.AddAPhoto,
                             contentDescription = "Add photo",
                             modifier = Modifier.size(48.dp),
-                            tint = LightGray
+                            tint = MaterialTheme.colorScheme.outlineVariant
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
                             text = "Tap to add product images",
                             style = MaterialTheme.typography.bodyMedium,
-                            color = LightGray
+                            color = MaterialTheme.colorScheme.outlineVariant
                         )
                     }
                 }
@@ -161,14 +154,14 @@ fun AddProductScreen(
                                     .align(Alignment.TopEnd)
                                     .size(20.dp)
                                     .clip(RoundedCornerShape(50))
-                                    .background(DeepSlate.copy(alpha = 0.7f))
+                                    .background(MaterialTheme.colorScheme.onSurfaceVariant)
                                     .clickable {
                                         selectedImageUris = selectedImageUris.toMutableList().apply {
                                             removeAt(index)
                                         }
                                     }
                                     .padding(2.dp),
-                                tint = White
+                                tint = MaterialTheme.colorScheme.onPrimary
                             )
                         }
                     }
@@ -177,7 +170,7 @@ fun AddProductScreen(
                         modifier = Modifier
                             .size(72.dp)
                             .clip(RoundedCornerShape(8.dp))
-                            .background(PaleMint)
+                            .background(MaterialTheme.colorScheme.surface)
                             .clickable {
                                 photoPickerLauncher.launch(
                                     PickVisualMediaRequest(
@@ -190,7 +183,7 @@ fun AddProductScreen(
                         Icon(
                             imageVector = Icons.Filled.AddAPhoto,
                             contentDescription = "Add more images",
-                            tint = ForestGreen,
+                            tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(28.dp)
                         )
                     }
@@ -198,7 +191,7 @@ fun AddProductScreen(
                 Text(
                     text = "${selectedImageUris.size} image(s) selected",
                     style = MaterialTheme.typography.bodySmall,
-                    color = LightGray
+                    color = MaterialTheme.colorScheme.outlineVariant
                 )
             }
 
@@ -217,10 +210,10 @@ fun AddProductScreen(
                     { Text("Name is required") }
                 } else null,
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = ForestGreen,
-                    unfocusedBorderColor = SageGreen,
-                    cursorColor = ForestGreen,
-                    focusedLabelColor = ForestGreen
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                    cursorColor = MaterialTheme.colorScheme.primary,
+                    focusedLabelColor = MaterialTheme.colorScheme.primary
                 )
             )
 
@@ -232,10 +225,10 @@ fun AddProductScreen(
                 modifier = Modifier.fillMaxWidth(),
                 maxLines = 4,
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = ForestGreen,
-                    unfocusedBorderColor = SageGreen,
-                    cursorColor = ForestGreen,
-                    focusedLabelColor = ForestGreen
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                    cursorColor = MaterialTheme.colorScheme.primary,
+                    focusedLabelColor = MaterialTheme.colorScheme.primary
                 )
             )
 
@@ -256,10 +249,10 @@ fun AddProductScreen(
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                 prefix = { Text("₹") },
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = ForestGreen,
-                    unfocusedBorderColor = SageGreen,
-                    cursorColor = ForestGreen,
-                    focusedLabelColor = ForestGreen
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                    cursorColor = MaterialTheme.colorScheme.primary,
+                    focusedLabelColor = MaterialTheme.colorScheme.primary
                 )
             )
 
@@ -289,8 +282,8 @@ fun AddProductScreen(
                     .fillMaxWidth()
                     .height(52.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = ForestGreen,
-                    contentColor = White
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
                 ),
                 shape = RoundedCornerShape(12.dp),
                 elevation = ButtonDefaults.buttonElevation(
@@ -301,7 +294,7 @@ fun AddProductScreen(
                 Text(
                     text = "Save Product",
                     style = MaterialTheme.typography.bodyLarge,
-                    color = White
+                    color = MaterialTheme.colorScheme.onPrimary
                 )
             }
 

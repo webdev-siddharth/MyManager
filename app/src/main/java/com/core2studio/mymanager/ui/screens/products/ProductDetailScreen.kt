@@ -54,20 +54,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.core2studio.mymanager.data.local.entity.Product
-import com.core2studio.mymanager.theme.DeepSlate
-import com.core2studio.mymanager.theme.ForestGreen
-import com.core2studio.mymanager.theme.LightGray
-import com.core2studio.mymanager.theme.MintCream
-import com.core2studio.mymanager.theme.PaleMint
-import com.core2studio.mymanager.theme.SageGreen
-import com.core2studio.mymanager.theme.White
 import com.core2studio.mymanager.ui.components.MyManagerTopBar
 import java.util.Locale
 
@@ -118,7 +110,7 @@ fun ProductDetailScreen(
                         onBack()
                     }
                 ) {
-                    Text("Delete", color = Color.Red)
+                    Text("Delete", color = MaterialTheme.colorScheme.error)
                 }
             },
             dismissButton = {
@@ -151,14 +143,14 @@ fun ProductDetailScreen(
                             Icon(
                                 imageVector = Icons.Filled.Edit,
                                 contentDescription = "Edit",
-                                tint = ForestGreen
+                                tint = MaterialTheme.colorScheme.primary
                             )
                         }
                         IconButton(onClick = { showDeleteDialog = true }) {
                             Icon(
                                 imageVector = Icons.Filled.Delete,
                                 contentDescription = "Delete",
-                                tint = Color.Red
+                                tint = MaterialTheme.colorScheme.error
                             )
                         }
                     }
@@ -175,8 +167,8 @@ fun ProductDetailScreen(
                             )
                         )
                     },
-                    containerColor = ForestGreen,
-                    contentColor = White
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
                 ) {
                     Icon(
                         imageVector = Icons.Filled.Add,
@@ -185,7 +177,7 @@ fun ProductDetailScreen(
                 }
             }
         },
-        containerColor = MintCream
+        containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
         if (product == null) {
             Box(
@@ -194,7 +186,7 @@ fun ProductDetailScreen(
                     .padding(innerPadding),
                 contentAlignment = Alignment.Center
             ) {
-                CircularProgressIndicator(color = ForestGreen)
+                CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
             }
         } else {
             Column(
@@ -231,12 +223,12 @@ fun ProductDetailScreen(
                                             .padding(8.dp)
                                             .size(36.dp)
                                             .clip(CircleShape)
-                                            .background(Color.Black.copy(alpha = 0.5f))
+                                            .background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.5f))
                                     ) {
                                         Icon(
                                             imageVector = Icons.Filled.Close,
                                             contentDescription = "Remove image",
-                                            tint = White,
+                                            tint = MaterialTheme.colorScheme.onPrimary,
                                             modifier = Modifier.size(20.dp)
                                         )
                                     }
@@ -251,7 +243,7 @@ fun ProductDetailScreen(
                                     .align(Alignment.BottomCenter)
                                     .padding(8.dp)
                                     .clip(RoundedCornerShape(12.dp))
-                                    .background(Color.Black.copy(alpha = 0.5f))
+                                    .background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.5f))
                                     .padding(horizontal = 12.dp, vertical = 6.dp),
                                 horizontalArrangement = Arrangement.spacedBy(6.dp)
                             ) {
@@ -261,8 +253,8 @@ fun ProductDetailScreen(
                                             .size(8.dp)
                                             .clip(CircleShape)
                                             .background(
-                                                if (index == pagerState.currentPage) White
-                                                else White.copy(alpha = 0.5f)
+                                                if (index == pagerState.currentPage) MaterialTheme.colorScheme.surface
+                                                else MaterialTheme.colorScheme.surface.copy(alpha = 0.5f)
                                             )
                                     )
                                 }
@@ -275,7 +267,7 @@ fun ProductDetailScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .aspectRatio(1f)
-                            .background(PaleMint),
+                            .background(MaterialTheme.colorScheme.surface),
                         contentAlignment = Alignment.Center
                     ) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -283,19 +275,19 @@ fun ProductDetailScreen(
                                 imageVector = Icons.Filled.Image,
                                 contentDescription = "No images",
                                 modifier = Modifier.size(80.dp),
-                                tint = LightGray
+                                tint = MaterialTheme.colorScheme.outlineVariant
                             )
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
                                 text = "No images yet",
                                 style = MaterialTheme.typography.bodyLarge,
-                                color = LightGray
+                                color = MaterialTheme.colorScheme.outlineVariant
                             )
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
                                 text = "Tap + to add images",
                                 style = MaterialTheme.typography.bodyMedium,
-                                color = LightGray
+                                color = MaterialTheme.colorScheme.outlineVariant
                             )
                         }
                     }
@@ -314,10 +306,10 @@ fun ProductDetailScreen(
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
                             colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = ForestGreen,
-                                unfocusedBorderColor = SageGreen,
-                                cursorColor = ForestGreen,
-                                focusedLabelColor = ForestGreen
+                                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                                unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                                cursorColor = MaterialTheme.colorScheme.primary,
+                                focusedLabelColor = MaterialTheme.colorScheme.primary
                             )
                         )
 
@@ -328,10 +320,10 @@ fun ProductDetailScreen(
                             modifier = Modifier.fillMaxWidth(),
                             maxLines = 4,
                             colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = ForestGreen,
-                                unfocusedBorderColor = SageGreen,
-                                cursorColor = ForestGreen,
-                                focusedLabelColor = ForestGreen
+                                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                                unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                                cursorColor = MaterialTheme.colorScheme.primary,
+                                focusedLabelColor = MaterialTheme.colorScheme.primary
                             )
                         )
 
@@ -344,10 +336,10 @@ fun ProductDetailScreen(
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                             prefix = { Text("₹") },
                             colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = ForestGreen,
-                                unfocusedBorderColor = SageGreen,
-                                cursorColor = ForestGreen,
-                                focusedLabelColor = ForestGreen
+                                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                                unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                                cursorColor = MaterialTheme.colorScheme.primary,
+                                focusedLabelColor = MaterialTheme.colorScheme.primary
                             )
                         )
 
@@ -369,8 +361,8 @@ fun ProductDetailScreen(
                                 .fillMaxWidth()
                                 .height(52.dp),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = ForestGreen,
-                                contentColor = White
+                                containerColor = MaterialTheme.colorScheme.primary,
+                                contentColor = MaterialTheme.colorScheme.onPrimary
                             ),
                             shape = RoundedCornerShape(12.dp)
                         ) {
@@ -384,13 +376,13 @@ fun ProductDetailScreen(
                             text = product.name,
                             style = MaterialTheme.typography.headlineSmall,
                             fontWeight = FontWeight.Bold,
-                            color = DeepSlate
+                            color = MaterialTheme.colorScheme.onSurface
                         )
 
                         Text(
                             text = "₹${String.format(Locale.getDefault(), "%.2f", product.price)}",
                             style = MaterialTheme.typography.titleLarge,
-                            color = ForestGreen,
+                            color = MaterialTheme.colorScheme.primary,
                             fontWeight = FontWeight.SemiBold
                         )
 
@@ -399,7 +391,7 @@ fun ProductDetailScreen(
                             Text(
                                 text = product.description,
                                 style = MaterialTheme.typography.bodyLarge,
-                                color = DeepSlate.copy(alpha = 0.8f)
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
                             )
                         }
 
@@ -408,7 +400,7 @@ fun ProductDetailScreen(
                         Text(
                             text = "Quantity",
                             style = MaterialTheme.typography.bodyLarge,
-                            color = DeepSlate
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
@@ -419,18 +411,18 @@ fun ProductDetailScreen(
                                 modifier = Modifier
                                     .size(40.dp)
                                     .clip(CircleShape)
-                                    .background(PaleMint)
+                                    .background(MaterialTheme.colorScheme.surface)
                             ) {
                                 Icon(
                                     imageVector = Icons.Filled.Remove,
                                     contentDescription = "Decrease quantity",
-                                    tint = ForestGreen
+                                    tint = MaterialTheme.colorScheme.primary
                                 )
                             }
                             Text(
                                 text = "$quantity",
                                 style = MaterialTheme.typography.titleLarge,
-                                color = DeepSlate,
+                                color = MaterialTheme.colorScheme.onSurface,
                                 modifier = Modifier.padding(horizontal = 16.dp)
                             )
                             IconButton(
@@ -438,12 +430,12 @@ fun ProductDetailScreen(
                                 modifier = Modifier
                                     .size(40.dp)
                                     .clip(CircleShape)
-                                    .background(PaleMint)
+                                    .background(MaterialTheme.colorScheme.surface)
                             ) {
                                 Icon(
                                     imageVector = Icons.Filled.Add,
                                     contentDescription = "Increase quantity",
-                                    tint = ForestGreen
+                                    tint = MaterialTheme.colorScheme.primary
                                 )
                             }
                         }
@@ -456,8 +448,8 @@ fun ProductDetailScreen(
                                 .fillMaxWidth()
                                 .height(52.dp),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = ForestGreen,
-                                contentColor = White
+                                containerColor = MaterialTheme.colorScheme.primary,
+                                contentColor = MaterialTheme.colorScheme.onPrimary
                             ),
                             shape = RoundedCornerShape(12.dp)
                         ) {

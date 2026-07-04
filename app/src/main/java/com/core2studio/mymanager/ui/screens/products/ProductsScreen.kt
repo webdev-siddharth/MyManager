@@ -54,17 +54,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.core2studio.mymanager.data.local.entity.Product
-import com.core2studio.mymanager.theme.DeepSlate
-import com.core2studio.mymanager.theme.ForestGreen
-import com.core2studio.mymanager.theme.LightGray
-import com.core2studio.mymanager.theme.MintCream
-import com.core2studio.mymanager.theme.White
 import com.core2studio.mymanager.ui.components.EmptyState
 import com.core2studio.mymanager.ui.components.MyManagerCard
 import com.core2studio.mymanager.ui.components.MyManagerFAB
@@ -115,21 +109,21 @@ fun ProductsScreen(
                             Icon(
                                 imageVector = Icons.Filled.SelectAll,
                                 contentDescription = "Select All",
-                                tint = ForestGreen
+                                tint = MaterialTheme.colorScheme.primary
                             )
                         }
                         IconButton(onClick = { onShareProducts(selectedProducts) }) {
                             Icon(
                                 imageVector = Icons.Filled.Share,
                                 contentDescription = "Share selected",
-                                tint = ForestGreen
+                                tint = MaterialTheme.colorScheme.primary
                             )
                         }
                         IconButton(onClick = { showBatchDeleteDialog = true }) {
                             Icon(
                                 imageVector = Icons.Filled.Delete,
                                 contentDescription = "Delete selected",
-                                tint = Color.Red
+                                tint = MaterialTheme.colorScheme.error
                             )
                         }
                     }
@@ -152,7 +146,7 @@ fun ProductsScreen(
                                 Icon(
                                     imageVector = Icons.Filled.ShoppingCart,
                                     contentDescription = "Cart",
-                                    tint = ForestGreen
+                                    tint = MaterialTheme.colorScheme.primary
                                 )
                             }
                         }
@@ -169,7 +163,7 @@ fun ProductsScreen(
                 )
             }
         },
-        containerColor = MintCream
+        containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
         if (products.isEmpty()) {
             EmptyState(
@@ -198,7 +192,7 @@ fun ProductsScreen(
 
                     Box(
                         modifier = if (isSelectionMode && isSelected) {
-                            Modifier.border(2.dp, ForestGreen, RoundedCornerShape(12.dp))
+                            Modifier.border(2.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(12.dp))
                         } else {
                             Modifier
                         }
@@ -240,7 +234,7 @@ fun ProductsScreen(
                                     Icon(
                                         imageVector = Icons.Filled.Image,
                                         contentDescription = "No image",
-                                        tint = LightGray,
+                                        tint = MaterialTheme.colorScheme.outlineVariant,
                                         modifier = Modifier.fillMaxSize(0.4f)
                                     )
                                 }
@@ -249,7 +243,7 @@ fun ProductsScreen(
                             Text(
                                 text = product.name,
                                 style = MaterialTheme.typography.bodyLarge,
-                                color = DeepSlate,
+                                color = MaterialTheme.colorScheme.onSurface,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis
                             )
@@ -262,14 +256,14 @@ fun ProductsScreen(
                                 Text(
                                     text = "₹${String.format(Locale.getDefault(), "%.2f", product.price)}",
                                     style = MaterialTheme.typography.titleMedium,
-                                    color = ForestGreen
+                                    color = MaterialTheme.colorScheme.primary
                                 )
                                 if (!isSelectionMode) {
                                     FloatingActionButton(
                                         onClick = { onAddToCart(product) },
                                         modifier = Modifier.size(32.dp),
-                                        containerColor = ForestGreen,
-                                        contentColor = White,
+                                        containerColor = MaterialTheme.colorScheme.primary,
+                                        contentColor = MaterialTheme.colorScheme.onPrimary,
                                         shape = CircleShape,
                                         elevation = FloatingActionButtonDefaults.elevation(
                                             defaultElevation = 0.dp,
@@ -301,8 +295,8 @@ fun ProductsScreen(
                                 },
                                 modifier = Modifier.align(Alignment.TopStart),
                                 colors = CheckboxDefaults.colors(
-                                    checkedColor = ForestGreen,
-                                    uncheckedColor = DeepSlate.copy(alpha = 0.5f)
+                                    checkedColor = MaterialTheme.colorScheme.primary,
+                                    uncheckedColor = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             )
                         } else {
@@ -312,14 +306,14 @@ fun ProductsScreen(
                                     .align(Alignment.TopEnd)
                                     .padding(6.dp),
                                 shape = CircleShape,
-                                color = Color.White.copy(alpha = 0.7f),
+                                color = MaterialTheme.colorScheme.surface.copy(alpha = 0.7f),
                                 shadowElevation = 2.dp
                             ) {
                                 Icon(
                                     imageVector = Icons.Filled.MoreVert,
                                     contentDescription = "More options",
                                     modifier = Modifier.padding(6.dp),
-                                    tint = DeepSlate
+                                    tint = MaterialTheme.colorScheme.onSurface
                                 )
                             }
 
@@ -337,12 +331,12 @@ fun ProductsScreen(
                                         Icon(
                                             imageVector = Icons.Filled.Edit,
                                             contentDescription = null,
-                                            tint = ForestGreen
+                                            tint = MaterialTheme.colorScheme.primary
                                         )
                                     }
                                 )
                                 DropdownMenuItem(
-                                    text = { Text("Delete", color = Color.Red) },
+                                    text = { Text("Delete", color = MaterialTheme.colorScheme.error) },
                                     onClick = {
                                         expandedProductId = null
                                         showDeleteDialog = product
@@ -351,7 +345,7 @@ fun ProductsScreen(
                                         Icon(
                                             imageVector = Icons.Filled.Delete,
                                             contentDescription = null,
-                                            tint = Color.Red
+                                            tint = MaterialTheme.colorScheme.error
                                         )
                                     }
                                 )
@@ -366,7 +360,7 @@ fun ProductsScreen(
                                         Icon(
                                             imageVector = Icons.Filled.CheckBox,
                                             contentDescription = null,
-                                            tint = ForestGreen
+                                            tint = MaterialTheme.colorScheme.primary
                                         )
                                     }
                                 )
@@ -380,7 +374,7 @@ fun ProductsScreen(
                                         Icon(
                                             imageVector = Icons.Filled.Share,
                                             contentDescription = null,
-                                            tint = ForestGreen
+                                            tint = MaterialTheme.colorScheme.primary
                                         )
                                     }
                                 )
@@ -402,7 +396,7 @@ fun ProductsScreen(
                     onDeleteProduct(product)
                     showDeleteDialog = null
                 }) {
-                    Text("Delete", color = Color.Red)
+                    Text("Delete", color = MaterialTheme.colorScheme.error)
                 }
             },
             dismissButton = {
@@ -429,7 +423,7 @@ fun ProductsScreen(
                     isSelectionMode = false
                     showBatchDeleteDialog = false
                 }) {
-                    Text("Delete", color = Color.Red)
+                    Text("Delete", color = MaterialTheme.colorScheme.error)
                 }
             },
             dismissButton = {

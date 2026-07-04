@@ -20,11 +20,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.core2studio.mymanager.data.local.entity.Category
-import com.core2studio.mymanager.theme.DeepSlate
-import com.core2studio.mymanager.theme.ForestGreen
-import com.core2studio.mymanager.theme.PaleMint
-import com.core2studio.mymanager.theme.SageGreen
-import com.core2studio.mymanager.theme.White
 
 @Composable
 fun AddCategoryDialog(
@@ -38,13 +33,13 @@ fun AddCategoryDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        containerColor = PaleMint,
+        containerColor = MaterialTheme.colorScheme.surface,
         tonalElevation = 0.dp,
         title = {
             Text(
                 text = if (editCategory != null) "Edit Category" else "Add Category",
                 style = MaterialTheme.typography.titleLarge,
-                color = DeepSlate
+                color = MaterialTheme.colorScheme.onSurface
             )
         },
         text = {
@@ -63,10 +58,10 @@ fun AddCategoryDialog(
                         { Text("Name is required") }
                     } else null,
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = ForestGreen,
-                        unfocusedBorderColor = SageGreen,
-                        cursorColor = ForestGreen,
-                        focusedLabelColor = ForestGreen
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                        cursorColor = MaterialTheme.colorScheme.primary,
+                        focusedLabelColor = MaterialTheme.colorScheme.primary
                     )
                 )
                 Spacer(modifier = Modifier.height(8.dp))
@@ -77,10 +72,10 @@ fun AddCategoryDialog(
                     modifier = Modifier.fillMaxWidth(),
                     maxLines = 3,
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = ForestGreen,
-                        unfocusedBorderColor = SageGreen,
-                        cursorColor = ForestGreen,
-                        focusedLabelColor = ForestGreen
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                        cursorColor = MaterialTheme.colorScheme.primary,
+                        focusedLabelColor = MaterialTheme.colorScheme.primary
                     )
                 )
             }
@@ -95,8 +90,8 @@ fun AddCategoryDialog(
                     }
                 },
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = ForestGreen,
-                    contentColor = White
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
                 ),
                 elevation = ButtonDefaults.buttonElevation(
                     defaultElevation = 0.dp,
@@ -110,7 +105,7 @@ fun AddCategoryDialog(
             OutlinedButton(
                 onClick = onDismiss,
                 colors = ButtonDefaults.outlinedButtonColors(
-                    contentColor = ForestGreen
+                    contentColor = MaterialTheme.colorScheme.primary
                 )
             ) {
                 Text("Cancel")

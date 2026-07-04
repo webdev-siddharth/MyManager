@@ -48,11 +48,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.core2studio.mymanager.data.local.entity.Product
-import com.core2studio.mymanager.theme.DeepSlate
-import com.core2studio.mymanager.theme.ForestGreen
-import com.core2studio.mymanager.theme.MintCream
-import com.core2studio.mymanager.theme.SageGreen
-import com.core2studio.mymanager.theme.White
 import com.core2studio.mymanager.ui.components.EmptyState
 import com.core2studio.mymanager.ui.components.MyManagerCard
 import com.core2studio.mymanager.ui.components.MyManagerTopBar
@@ -101,7 +96,7 @@ fun DashboardScreen(
             MyManagerTopBar(title = "MyManager")
         },
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
-        containerColor = MintCream
+        containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
         PullToRefreshBox(
             isRefreshing = isRefreshing,
@@ -167,7 +162,7 @@ fun DashboardScreen(
                     Text(
                         text = "Quick Actions",
                         style = MaterialTheme.typography.titleMedium,
-                        color = DeepSlate
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Row(
@@ -182,8 +177,8 @@ fun DashboardScreen(
                                 .weight(1f)
                                 .fillMaxHeight(),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = ForestGreen,
-                                contentColor = White
+                                containerColor = MaterialTheme.colorScheme.primary,
+                                contentColor = MaterialTheme.colorScheme.onPrimary
                             ),
                             elevation = ButtonDefaults.buttonElevation(
                                 defaultElevation = 0.dp,
@@ -203,8 +198,8 @@ fun DashboardScreen(
                                 .weight(1f)
                                 .fillMaxHeight(),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = ForestGreen,
-                                contentColor = White
+                                containerColor = MaterialTheme.colorScheme.primary,
+                                contentColor = MaterialTheme.colorScheme.onPrimary
                             ),
                             elevation = ButtonDefaults.buttonElevation(
                                 defaultElevation = 0.dp,
@@ -232,12 +227,12 @@ fun DashboardScreen(
                         Text(
                             text = "Catalog",
                             style = MaterialTheme.typography.titleMedium,
-                            color = DeepSlate
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
                             text = "${products.size} items",
                             style = MaterialTheme.typography.labelMedium,
-                            color = DeepSlate.copy(alpha = 0.6f)
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -287,7 +282,7 @@ fun DashboardScreen(
                                                     Icon(
                                                         imageVector = Icons.Filled.Inventory2,
                                                         contentDescription = product.name,
-                                                        tint = SageGreen.copy(alpha = 0.5f),
+                                                        tint = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
                                                         modifier = Modifier.size(40.dp)
                                                     )
                                                 }
@@ -298,7 +293,7 @@ fun DashboardScreen(
                                             text = product.name,
                                             style = MaterialTheme.typography.bodyMedium,
                                             fontWeight = FontWeight.SemiBold,
-                                            color = DeepSlate,
+                                            color = MaterialTheme.colorScheme.onSurface,
                                             maxLines = 1,
                                             overflow = TextOverflow.Ellipsis
                                         )
@@ -306,7 +301,7 @@ fun DashboardScreen(
                                         Text(
                                             text = currencyFormatter.format(product.price),
                                             style = MaterialTheme.typography.labelLarge,
-                                            color = ForestGreen,
+                                            color = MaterialTheme.colorScheme.primary,
                                             maxLines = 1
                                         )
                                     }

@@ -41,11 +41,6 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.core2studio.mymanager.theme.DeepSlate
-import com.core2studio.mymanager.theme.ErrorRed
-import com.core2studio.mymanager.theme.ForestGreen
-import com.core2studio.mymanager.theme.SageGreen
-import com.core2studio.mymanager.theme.White
 
 @Composable
 fun SignUpScreen(
@@ -57,10 +52,10 @@ fun SignUpScreen(
     var confirmPasswordVisible by remember { mutableStateOf(false) }
 
     val textFieldColors = OutlinedTextFieldDefaults.colors(
-        focusedBorderColor = ForestGreen,
-        unfocusedBorderColor = SageGreen,
-        cursorColor = ForestGreen,
-        focusedLabelColor = ForestGreen
+        focusedBorderColor = MaterialTheme.colorScheme.primary,
+        unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+        cursorColor = MaterialTheme.colorScheme.primary,
+        focusedLabelColor = MaterialTheme.colorScheme.primary
     )
 
     Column(
@@ -76,14 +71,14 @@ fun SignUpScreen(
         Text(
             text = "Create Account",
             style = MaterialTheme.typography.headlineLarge,
-            color = ForestGreen,
+            color = MaterialTheme.colorScheme.primary,
             fontWeight = FontWeight.Bold
         )
 
         Text(
             text = "Sign up to get started",
             style = MaterialTheme.typography.bodyLarge,
-            color = DeepSlate.copy(alpha = 0.7f)
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
         )
 
         Spacer(modifier = Modifier.height(32.dp))
@@ -92,7 +87,7 @@ fun SignUpScreen(
             value = state.displayName,
             onValueChange = { viewModel.setDisplayName(it) },
             label = { Text("Full Name") },
-            leadingIcon = { Icon(Icons.Filled.Person, contentDescription = null, tint = SageGreen) },
+            leadingIcon = { Icon(Icons.Filled.Person, contentDescription = null, tint = MaterialTheme.colorScheme.outline) },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
             colors = textFieldColors,
@@ -105,7 +100,7 @@ fun SignUpScreen(
             value = state.email,
             onValueChange = { viewModel.updateEmail(it) },
             label = { Text("Email") },
-            leadingIcon = { Icon(Icons.Filled.Email, contentDescription = null, tint = SageGreen) },
+            leadingIcon = { Icon(Icons.Filled.Email, contentDescription = null, tint = MaterialTheme.colorScheme.outline) },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
             colors = textFieldColors,
@@ -118,13 +113,13 @@ fun SignUpScreen(
             value = state.password,
             onValueChange = { viewModel.updatePassword(it) },
             label = { Text("Password") },
-            leadingIcon = { Icon(Icons.Filled.Lock, contentDescription = null, tint = SageGreen) },
+            leadingIcon = { Icon(Icons.Filled.Lock, contentDescription = null, tint = MaterialTheme.colorScheme.outline) },
             trailingIcon = {
                 IconButton(onClick = { passwordVisible = !passwordVisible }) {
                     Icon(
                         imageVector = if (passwordVisible) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
                         contentDescription = if (passwordVisible) "Hide password" else "Show password",
-                        tint = SageGreen
+                        tint = MaterialTheme.colorScheme.outline
                     )
                 }
             },
@@ -141,13 +136,13 @@ fun SignUpScreen(
             value = state.confirmPassword,
             onValueChange = { viewModel.updateConfirmPassword(it) },
             label = { Text("Confirm Password") },
-            leadingIcon = { Icon(Icons.Filled.Lock, contentDescription = null, tint = SageGreen) },
+            leadingIcon = { Icon(Icons.Filled.Lock, contentDescription = null, tint = MaterialTheme.colorScheme.outline) },
             trailingIcon = {
                 IconButton(onClick = { confirmPasswordVisible = !confirmPasswordVisible }) {
                     Icon(
                         imageVector = if (confirmPasswordVisible) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
                         contentDescription = if (confirmPasswordVisible) "Hide password" else "Show password",
-                        tint = SageGreen
+                        tint = MaterialTheme.colorScheme.outline
                     )
                 }
             },
@@ -162,7 +157,7 @@ fun SignUpScreen(
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = errorText,
-                color = ErrorRed,
+                color = MaterialTheme.colorScheme.error,
                 style = MaterialTheme.typography.bodySmall,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth()
@@ -177,13 +172,13 @@ fun SignUpScreen(
                 .fillMaxWidth()
                 .height(50.dp),
             enabled = !state.isLoading,
-            colors = ButtonDefaults.buttonColors(containerColor = ForestGreen, contentColor = White),
+            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary, contentColor = MaterialTheme.colorScheme.onPrimary),
             shape = RoundedCornerShape(12.dp)
         ) {
             if (state.isLoading) {
                 CircularProgressIndicator(
                     modifier = Modifier.size(24.dp),
-                    color = White,
+                    color = MaterialTheme.colorScheme.onPrimary,
                     strokeWidth = 2.dp
                 )
             } else {
@@ -196,7 +191,7 @@ fun SignUpScreen(
         Text(
             text = "or",
             style = MaterialTheme.typography.bodyMedium,
-            color = DeepSlate.copy(alpha = 0.5f)
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -217,7 +212,7 @@ fun SignUpScreen(
         Text(
             text = "Already have an account? Sign In",
             style = MaterialTheme.typography.bodyMedium,
-            color = ForestGreen,
+            color = MaterialTheme.colorScheme.primary,
             fontWeight = FontWeight.SemiBold,
             modifier = Modifier.clickable(enabled = !state.isLoading) { onNavigateToLogin() }
         )

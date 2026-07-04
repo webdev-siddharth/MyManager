@@ -30,11 +30,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.core2studio.mymanager.theme.DeepSlate
-import com.core2studio.mymanager.theme.ErrorRed
-import com.core2studio.mymanager.theme.ForestGreen
-import com.core2studio.mymanager.theme.SageGreen
-import com.core2studio.mymanager.theme.White
 
 @Composable
 fun EmailVerificationScreen(
@@ -55,7 +50,7 @@ fun EmailVerificationScreen(
         Icon(
             imageVector = Icons.Filled.Email,
             contentDescription = null,
-            tint = ForestGreen,
+            tint = MaterialTheme.colorScheme.primary,
             modifier = Modifier.size(72.dp)
         )
 
@@ -64,7 +59,7 @@ fun EmailVerificationScreen(
         Text(
             text = "Verify your email",
             style = MaterialTheme.typography.headlineMedium,
-            color = ForestGreen,
+            color = MaterialTheme.colorScheme.primary,
             fontWeight = FontWeight.Bold
         )
 
@@ -73,13 +68,13 @@ fun EmailVerificationScreen(
         Text(
             text = "We sent a verification link to",
             style = MaterialTheme.typography.bodyLarge,
-            color = DeepSlate.copy(alpha = 0.7f)
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
         )
 
         Text(
             text = state.email,
             style = MaterialTheme.typography.bodyLarge,
-            color = ForestGreen,
+            color = MaterialTheme.colorScheme.primary,
             fontWeight = FontWeight.SemiBold
         )
 
@@ -88,7 +83,7 @@ fun EmailVerificationScreen(
         Text(
             text = "Check your inbox and click the link to verify your account.",
             style = MaterialTheme.typography.bodyMedium,
-            color = DeepSlate.copy(alpha = 0.6f),
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
             textAlign = TextAlign.Center,
             modifier = Modifier.fillMaxWidth()
         )
@@ -97,7 +92,7 @@ fun EmailVerificationScreen(
             Spacer(modifier = Modifier.height(16.dp))
             Text(
                 text = message,
-                color = if (message.contains("sent", ignoreCase = true)) ForestGreen else ErrorRed,
+                color = if (message.contains("sent", ignoreCase = true)) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
                 style = MaterialTheme.typography.bodySmall,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth()
@@ -112,13 +107,13 @@ fun EmailVerificationScreen(
                 .fillMaxWidth()
                 .height(50.dp),
             enabled = !state.isLoading,
-            colors = ButtonDefaults.buttonColors(containerColor = ForestGreen, contentColor = White),
+            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary, contentColor = MaterialTheme.colorScheme.onPrimary),
             shape = RoundedCornerShape(12.dp)
         ) {
             if (state.isLoading) {
                 CircularProgressIndicator(
                     modifier = Modifier.size(24.dp),
-                    color = White,
+                    color = MaterialTheme.colorScheme.onPrimary,
                     strokeWidth = 2.dp
                 )
             } else {
@@ -139,7 +134,7 @@ fun EmailVerificationScreen(
             Icon(
                 imageVector = Icons.Filled.Verified,
                 contentDescription = null,
-                tint = ForestGreen
+                tint = MaterialTheme.colorScheme.primary
             )
             Spacer(modifier = Modifier.size(8.dp))
             Text("Resend Email", fontWeight = FontWeight.SemiBold)
@@ -153,7 +148,7 @@ fun EmailVerificationScreen(
         ) {
             Text(
                 text = "Sign out",
-                color = DeepSlate.copy(alpha = 0.6f),
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                 style = MaterialTheme.typography.bodyMedium
             )
         }

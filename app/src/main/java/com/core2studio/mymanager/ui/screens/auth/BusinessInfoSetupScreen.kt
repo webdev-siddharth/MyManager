@@ -32,11 +32,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.core2studio.mymanager.theme.DeepSlate
-import com.core2studio.mymanager.theme.ErrorRed
-import com.core2studio.mymanager.theme.ForestGreen
-import com.core2studio.mymanager.theme.SageGreen
-import com.core2studio.mymanager.theme.White
 
 @Composable
 fun BusinessInfoSetupScreen(
@@ -45,10 +40,10 @@ fun BusinessInfoSetupScreen(
     val state by viewModel.uiState.collectAsState()
 
     val textFieldColors = OutlinedTextFieldDefaults.colors(
-        focusedBorderColor = ForestGreen,
-        unfocusedBorderColor = SageGreen,
-        cursorColor = ForestGreen,
-        focusedLabelColor = ForestGreen
+        focusedBorderColor = MaterialTheme.colorScheme.primary,
+        unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+        cursorColor = MaterialTheme.colorScheme.primary,
+        focusedLabelColor = MaterialTheme.colorScheme.primary
     )
 
     Column(
@@ -64,7 +59,7 @@ fun BusinessInfoSetupScreen(
             imageVector = Icons.Filled.Business,
             contentDescription = null,
             modifier = Modifier.size(64.dp),
-            tint = ForestGreen
+            tint = MaterialTheme.colorScheme.primary
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -72,14 +67,14 @@ fun BusinessInfoSetupScreen(
         Text(
             text = "Set Up Your Business",
             style = MaterialTheme.typography.headlineLarge,
-            color = ForestGreen,
+            color = MaterialTheme.colorScheme.primary,
             fontWeight = FontWeight.Bold
         )
 
         Text(
             text = "Tell us about your business to get started",
             style = MaterialTheme.typography.bodyLarge,
-            color = DeepSlate.copy(alpha = 0.7f)
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
         )
 
         Spacer(modifier = Modifier.height(32.dp))
@@ -88,7 +83,7 @@ fun BusinessInfoSetupScreen(
             value = state.pendingBusinessName,
             onValueChange = { viewModel.updatePendingBusinessName(it) },
             label = { Text("Business Name *") },
-            leadingIcon = { Icon(Icons.Filled.Business, contentDescription = null, tint = SageGreen) },
+            leadingIcon = { Icon(Icons.Filled.Business, contentDescription = null, tint = MaterialTheme.colorScheme.outline) },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
             colors = textFieldColors,
@@ -102,7 +97,7 @@ fun BusinessInfoSetupScreen(
             value = state.pendingBusinessEmail,
             onValueChange = { viewModel.updatePendingBusinessEmail(it) },
             label = { Text("Business Email *") },
-            leadingIcon = { Icon(Icons.Filled.Email, contentDescription = null, tint = SageGreen) },
+            leadingIcon = { Icon(Icons.Filled.Email, contentDescription = null, tint = MaterialTheme.colorScheme.outline) },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
             colors = textFieldColors,
@@ -116,7 +111,7 @@ fun BusinessInfoSetupScreen(
             value = state.pendingBusinessPhone,
             onValueChange = { viewModel.updatePendingBusinessPhone(it) },
             label = { Text("Business Phone *") },
-            leadingIcon = { Icon(Icons.Filled.Phone, contentDescription = null, tint = SageGreen) },
+            leadingIcon = { Icon(Icons.Filled.Phone, contentDescription = null, tint = MaterialTheme.colorScheme.outline) },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
             colors = textFieldColors,
@@ -130,7 +125,7 @@ fun BusinessInfoSetupScreen(
             value = state.pendingBusinessAddress,
             onValueChange = { viewModel.updatePendingBusinessAddress(it) },
             label = { Text("Business Address *") },
-            leadingIcon = { Icon(Icons.Filled.LocationOn, contentDescription = null, tint = SageGreen) },
+            leadingIcon = { Icon(Icons.Filled.LocationOn, contentDescription = null, tint = MaterialTheme.colorScheme.outline) },
             modifier = Modifier.fillMaxWidth(),
             maxLines = 3,
             colors = textFieldColors,
@@ -144,7 +139,7 @@ fun BusinessInfoSetupScreen(
             value = state.pendingGstin,
             onValueChange = { viewModel.updatePendingGstin(it) },
             label = { Text("GSTIN (optional)") },
-            leadingIcon = { Icon(Icons.Filled.CreditCard, contentDescription = null, tint = SageGreen) },
+            leadingIcon = { Icon(Icons.Filled.CreditCard, contentDescription = null, tint = MaterialTheme.colorScheme.outline) },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
             colors = textFieldColors,
@@ -156,7 +151,7 @@ fun BusinessInfoSetupScreen(
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = errorText,
-                color = ErrorRed,
+                color = MaterialTheme.colorScheme.error,
                 style = MaterialTheme.typography.bodySmall,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth()
@@ -171,13 +166,13 @@ fun BusinessInfoSetupScreen(
                 .fillMaxWidth()
                 .height(50.dp),
             enabled = !state.isLoading,
-            colors = ButtonDefaults.buttonColors(containerColor = ForestGreen, contentColor = White),
+            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary, contentColor = MaterialTheme.colorScheme.onPrimary),
             shape = RoundedCornerShape(12.dp)
         ) {
             if (state.isLoading) {
                 CircularProgressIndicator(
                     modifier = Modifier.size(24.dp),
-                    color = White,
+                    color = MaterialTheme.colorScheme.onPrimary,
                     strokeWidth = 2.dp
                 )
             } else {
