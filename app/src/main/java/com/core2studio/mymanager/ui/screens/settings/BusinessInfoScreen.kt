@@ -69,8 +69,9 @@ fun BusinessInfoScreen(
     businessAddress: String = "",
     businessLogoUrl: String = "",
     gstin: String = "",
+    website: String = "",
     isUploadingLogo: Boolean = false,
-    onSaveBusinessInfo: (name: String, email: String, phone: String, address: String, gstin: String) -> Unit = { _, _, _, _, _ -> },
+    onSaveBusinessInfo: (name: String, email: String, phone: String, address: String, gstin: String, website: String) -> Unit = { _, _, _, _, _, _ -> },
     onUploadLogo: (Uri) -> Unit = {},
     onClearLogo: () -> Unit = {},
     onViewBusinessCard: () -> Unit = {},
@@ -85,6 +86,7 @@ fun BusinessInfoScreen(
     var localBusinessPhone by remember { mutableStateOf(businessPhone) }
     var localBusinessAddress by remember { mutableStateOf(businessAddress) }
     var localGstin by remember { mutableStateOf(gstin) }
+    var localWebsite by remember { mutableStateOf(website) }
 
     val context = LocalContext.current
 
@@ -113,12 +115,13 @@ fun BusinessInfoScreen(
         }
     }
 
-    LaunchedEffect(businessName, businessEmail, businessPhone, businessAddress, gstin) {
+    LaunchedEffect(businessName, businessEmail, businessPhone, businessAddress, gstin, website) {
         localBusinessName = businessName
         localBusinessEmail = businessEmail
         localBusinessPhone = businessPhone
         localBusinessAddress = businessAddress
         localGstin = gstin
+        localWebsite = website
     }
 
     val textFieldColors = OutlinedTextFieldDefaults.colors(
@@ -140,6 +143,7 @@ fun BusinessInfoScreen(
                         localBusinessPhone = businessPhone
                         localBusinessAddress = businessAddress
                         localGstin = gstin
+                        localWebsite = website
                     } else {
                         onBack()
                     }
@@ -291,6 +295,16 @@ fun BusinessInfoScreen(
                         colors = textFieldColors,
                         placeholder = { Text("Enter GSTIN") }
                     )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = localWebsite,
+                        onValueChange = { localWebsite = it },
+                        label = { Text("Website (optional)") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        colors = textFieldColors,
+                        placeholder = { Text("Enter your website URL") }
+                    )
                 }
 
                 Button(
@@ -300,7 +314,8 @@ fun BusinessInfoScreen(
                             localBusinessEmail,
                             localBusinessPhone,
                             localBusinessAddress,
-                            localGstin
+                            localGstin,
+                            localWebsite
                         )
                         isEditMode = false
                     },
@@ -352,10 +367,14 @@ fun BusinessInfoScreen(
                     }
                     if (gstin.isNotEmpty()) {
                         InfoRow(icon = Icons.Filled.CreditCard, label = "GSTIN", value = gstin)
+                        Spacer(modifier = Modifier.height(8.dp))
+                    }
+                    if (website.isNotEmpty()) {
+                        InfoRow(icon = Icons.Filled.Store, label = "Website", value = website)
                     }
 
                     if (businessName.isEmpty() && businessEmail.isEmpty() &&
-                        businessPhone.isEmpty() && businessAddress.isEmpty() && gstin.isEmpty()
+                        businessPhone.isEmpty() && businessAddress.isEmpty() && gstin.isEmpty() && website.isEmpty()
                     ) {
                         Text(
                             text = "No business info added yet. Tap Edit to add your details.",

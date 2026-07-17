@@ -61,7 +61,7 @@ import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.core2studio.mymanager.data.local.entity.Product
 import com.core2studio.mymanager.ui.components.MyManagerTopBar
-import java.util.Locale
+import com.core2studio.mymanager.data.utils.CurrencyUtils
 
 @Composable
 fun ProductDetailScreen(
@@ -74,6 +74,7 @@ fun ProductDetailScreen(
     onAddToCart: (Product, Int) -> Unit = { _, _ -> },
     isUploading: Boolean = false
 ) {
+    val context = androidx.compose.ui.platform.LocalContext.current
     var isEditing by remember { mutableStateOf(false) }
     var editName by remember { mutableStateOf("") }
     var editDescription by remember { mutableStateOf("") }
@@ -330,11 +331,11 @@ fun ProductDetailScreen(
                         OutlinedTextField(
                             value = editPrice,
                             onValueChange = { editPrice = it },
-                            label = { Text("Price (₹)") },
+                            label = { Text("Price (${CurrencyUtils.getCurrencySymbol(CurrencyUtils.loadCurrencyCode(context))})") },
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                            prefix = { Text("₹") },
+                            prefix = { Text(CurrencyUtils.getCurrencySymbol(CurrencyUtils.loadCurrencyCode(context))) },
                             colors = OutlinedTextFieldDefaults.colors(
                                 focusedBorderColor = MaterialTheme.colorScheme.primary,
                                 unfocusedBorderColor = MaterialTheme.colorScheme.outline,
@@ -380,7 +381,7 @@ fun ProductDetailScreen(
                         )
 
                         Text(
-                            text = "₹${String.format(Locale.getDefault(), "%.2f", product.price)}",
+                            text = CurrencyUtils.formatCurrency(product.price, CurrencyUtils.loadCurrencyCode(context)),
                             style = MaterialTheme.typography.titleLarge,
                             color = MaterialTheme.colorScheme.primary,
                             fontWeight = FontWeight.SemiBold

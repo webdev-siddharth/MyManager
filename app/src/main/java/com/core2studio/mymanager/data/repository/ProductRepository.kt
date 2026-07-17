@@ -8,8 +8,13 @@ class ProductRepository(private val productDao: ProductDao) {
 
     fun getAllProducts(): Flow<List<Product>> = productDao.getAllProducts()
 
+    fun getRecentProducts(): Flow<List<Product>> = productDao.getRecentProducts()
+
     fun getProductsByCategory(categoryId: String): Flow<List<Product>> =
         productDao.getProductsByCategory(categoryId)
+
+    suspend fun getProductsByCategoryOnce(categoryId: String): List<Product> =
+        productDao.getProductsByCategoryOnce(categoryId)
 
     suspend fun getProductById(id: String): Product? = productDao.getProductById(id)
 

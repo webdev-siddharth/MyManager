@@ -23,6 +23,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
@@ -58,6 +59,7 @@ import com.core2studio.mymanager.ui.screens.settings.SettingsScreen
 import com.core2studio.mymanager.ui.screens.settings.SettingsViewModel
 import com.core2studio.mymanager.ui.screens.settings.UserProfileScreen
 import com.core2studio.mymanager.ui.screens.orders.AddOrderScreen
+import com.core2studio.mymanager.ui.screens.orders.OrderDetailScreen
 import com.core2studio.mymanager.ui.screens.orders.OrderViewModel
 import com.core2studio.mymanager.ui.screens.orders.OrdersScreen
 import com.core2studio.mymanager.ui.screens.cart.CartScreen
@@ -125,7 +127,7 @@ fun MyManagerNavGraph(
     LaunchedEffect(authState.isGoogleSignInTriggered) {
         if (authState.isGoogleSignInTriggered) {
             val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                .requestIdToken("44008709331-jbtrv3clsut6o369mupqbq1hkvnoeji8.apps.googleusercontent.com")
+                .requestIdToken(context.getString(com.core2studio.mymanager.R.string.google_web_client_id))
                 .requestEmail()
                 .build()
             val googleSignInClient = GoogleSignIn.getClient(context, gso)
@@ -220,6 +222,16 @@ private fun MainContent(
         settingsViewModel.loadSettings()
     }
 
+    LaunchedEffect(Unit) {
+        orderViewModel.setBusinessInfo(
+            name = settingsViewModel.getBusinessName(),
+            email = settingsViewModel.getBusinessEmail(),
+            phone = settingsViewModel.getBusinessPhone(),
+            address = settingsViewModel.getBusinessAddress(),
+            website = settingsViewModel.getWebsite()
+        )
+    }
+
     val showBottomBar = currentRoute in com.core2studio.mymanager.ui.navigation.bottomNavRoutes
 
     Scaffold(
@@ -281,11 +293,21 @@ private fun MainContent(
                             restoreState = true
                         }
                     },
+                    onNavigateToCatalog = {
+                        navController.navigate("categories") {
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    },
                     totalRevenue = uiState.totalRevenue,
                     pendingBalance = uiState.pendingBalance,
                     orderCount = uiState.orderCount,
                     completedCount = uiState.completedCount,
                     products = uiState.recentProducts,
+                    totalProductCount = uiState.totalProductCount,
                     isRefreshing = uiState.isRefreshing,
                     onRefresh = { dashboardViewModel.refresh() },
                     errorMessage = uiState.errorMessage,
@@ -436,12 +458,35 @@ private fun MainContent(
                 val uiState by orderViewModel.uiState.collectAsState()
                 com.core2studio.mymanager.ui.screens.orders.OrdersScreen(
                     onAddOrder = { navController.navigate("add_order") },
-                    onClientClick = { clientId -> navController.navigate("client/$clientId") },
+                    onOrderClick = { orderId -> navController.navigate("order/$orderId") },
                     orders = uiState.orders,
+                    searchQuery = uiState.searchQuery,
+                    filteredOrders = uiState.filteredOrders,
+                    onSearchQueryChange = { orderViewModel.onSearchQueryChange(it) },
                     clientNameResolver = { clientId ->
                         uiState.clients[clientId]?.name ?: "Unknown"
-                    },
-                    onStatusUpdate = { order -> orderViewModel.updateOrder(order) }
+                    }
+                )
+            }
+
+            composable(
+                route = "order/{orderId}",
+                arguments = listOf(navArgument("orderId") { type = NavType.StringType })
+            ) { backStackEntry ->
+                val orderId = backStackEntry.arguments?.getString("orderId") ?: ""
+                val uiState by orderViewModel.uiState.collectAsState()
+                val order = uiState.orders.find { it.id == orderId }
+                val clientName = order?.let { uiState.clients[it.clientId]?.name ?: "Unknown" } ?: "Unknown"
+                com.core2studio.mymanager.ui.screens.orders.OrderDetailScreen(
+                    order = order,
+                    clientName = clientName,
+                    onBack = { navController.popBackStack() },
+                    onStatusUpdate = { updatedOrder -> orderViewModel.updateOrder(updatedOrder) },
+                    onGenerateInvoice = { ord -> orderViewModel.generateInvoice(ord) },
+                    invoiceUri = uiState.invoiceUri,
+                    invoiceMessage = uiState.invoiceMessage,
+                    onClearUri = { orderViewModel.clearInvoiceUri() },
+                    onClearMessage = { orderViewModel.clearInvoiceMessage() }
                 )
             }
 
@@ -453,13 +498,16 @@ private fun MainContent(
                     onAddClient = { name, phone, email, address ->
                         orderViewModel.addClient(name, phone, email, address)
                     },
-                    onSave = { clientId, productName, amount, paid, status, notes, customFields ->
+                    onSave = { clientId, productName, quantity, unitPrice, amount, paid, status, paymentMethod, notes, customFields ->
                         orderViewModel.addOrder(
                             clientId,
                             productName,
+                            quantity,
+                            unitPrice,
                             amount,
                             paid,
                             status,
+                            paymentMethod,
                             customFields,
                             notes
                         )
@@ -473,6 +521,9 @@ private fun MainContent(
                 com.core2studio.mymanager.ui.screens.clients.ClientsScreen(
                     onClientClick = { clientId -> navController.navigate("client/$clientId") },
                     clients = uiState.clients,
+                    searchQuery = uiState.searchQuery,
+                    filteredClients = uiState.filteredClients,
+                    onSearchQueryChange = { clientViewModel.onSearchQueryChange(it) },
                     showAddDialog = uiState.showAddDialog,
                     onShowAddDialog = { clientViewModel.showAddDialog() },
                     onDismissAddDialog = { clientViewModel.dismissDialog() },
@@ -494,7 +545,8 @@ private fun MainContent(
                         name = settingsViewModel.getBusinessName(),
                         email = settingsViewModel.getBusinessEmail(),
                         phone = settingsViewModel.getBusinessPhone(),
-                        address = settingsViewModel.getBusinessAddress()
+                        address = settingsViewModel.getBusinessAddress(),
+                        website = settingsViewModel.getWebsite()
                     )
                 }
                 com.core2studio.mymanager.ui.screens.clients.ClientDetailScreen(
@@ -504,22 +556,37 @@ private fun MainContent(
                     transactions = uiState.clientTransactions,
                     onGenerateInvoice = { transaction -> clientViewModel.generateInvoice(transaction) },
                     invoiceMessage = uiState.invoiceMessage,
-                    onClearMessage = { clientViewModel.clearInvoiceMessage() }
+                    onClearMessage = { clientViewModel.clearInvoiceMessage() },
+                    invoiceUri = uiState.invoiceUri,
+                    onClearUri = { clientViewModel.clearInvoiceUri() },
+                    onEditClient = { uiState.selectedClient?.let { clientViewModel.showEditDialog(it) } },
+                    showEditDialog = uiState.showEditDialog,
+                    editClient = uiState.showEditDialogClient,
+                    onDismissEditDialog = { clientViewModel.dismissEditDialog() },
+                    onConfirmEdit = { name, phone, email, address ->
+                        clientViewModel.updateClient(clientId, name, phone, email, address)
+                    }
                 )
             }
 
             composable("settings") {
                 val uiState by settingsViewModel.uiState.collectAsState()
-                com.core2studio.mymanager.ui.screens.settings.SettingsScreen(
-                    onBusinessInfoClick = { navController.navigate("business_info") },
-                    onProfileClick = { navController.navigate("user_profile") },
-                    onSettingsClick = { navController.navigate("app_settings") },
-                    accountEmail = uiState.accountEmail,
-                    message = uiState.message,
-                    onSignOutApp = {
+                val onBusinessInfoClick = remember { { navController.navigate("business_info") } }
+                val onProfileClick = remember { { navController.navigate("user_profile") } }
+                val onSettingsClick = remember { { navController.navigate("app_settings") } }
+                val onSignOutApp = remember {
+                    {
                         settingsViewModel.signOut()
                         authViewModel.signOut()
                     }
+                }
+                com.core2studio.mymanager.ui.screens.settings.SettingsScreen(
+                    onBusinessInfoClick = onBusinessInfoClick,
+                    onProfileClick = onProfileClick,
+                    onSettingsClick = onSettingsClick,
+                    accountEmail = uiState.accountEmail,
+                    message = uiState.message,
+                    onSignOutApp = onSignOutApp
                 )
             }
 
@@ -528,6 +595,8 @@ private fun MainContent(
                 com.core2studio.mymanager.ui.screens.settings.AppSettingsScreen(
                     themeMode = uiState.themeMode,
                     onThemeModeSelected = { settingsViewModel.saveThemeMode(it) },
+                    currencyCode = uiState.currencyCode,
+                    onCurrencySelected = { settingsViewModel.saveCurrency(it) },
                     onBack = { navController.popBackStack() }
                 )
             }
@@ -541,9 +610,10 @@ private fun MainContent(
                     businessAddress = uiState.businessAddress,
                     businessLogoUrl = uiState.businessLogoUrl,
                     gstin = uiState.gstin,
+                    website = uiState.website,
                     isUploadingLogo = uiState.isUploadingLogo,
-                    onSaveBusinessInfo = { name, email, phone, address, gstin ->
-                        settingsViewModel.saveBusinessInfo(name, email, phone, address, gstin = gstin)
+                    onSaveBusinessInfo = { name, email, phone, address, gstin, website ->
+                        settingsViewModel.saveBusinessInfo(name, email, phone, address, gstin = gstin, website = website)
                     },
                     onUploadLogo = { uri -> settingsViewModel.uploadLogo(uri) },
                     onClearLogo = { settingsViewModel.clearLogo() },
@@ -561,6 +631,8 @@ private fun MainContent(
                     businessAddress = uiState.businessAddress,
                     businessLogoUrl = uiState.businessLogoUrl,
                     gstin = uiState.gstin,
+                    website = uiState.website,
+                    displayName = authViewModel.getDisplayName(),
                     onBack = { navController.popBackStack() }
                 )
             }
@@ -568,8 +640,8 @@ private fun MainContent(
             composable("user_profile") {
                 val authUiState by authViewModel.uiState.collectAsState()
                 com.core2studio.mymanager.ui.screens.settings.UserProfileScreen(
-                    displayName = authViewModel.getDisplayName(),
-                    email = authViewModel.getEmail(),
+                    displayName = authUiState.displayName,
+                    email = authUiState.email,
                     isLoading = authUiState.isLoading,
                     message = authUiState.error,
                     onUpdateDisplayName = { newName ->

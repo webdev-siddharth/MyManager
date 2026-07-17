@@ -1,5 +1,6 @@
 package com.core2studio.mymanager.ui.screens.orders
 
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -8,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -16,10 +18,12 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuAnchorType
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.ExposedDropdownMenuDefaults
@@ -35,17 +39,21 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.core2studio.mymanager.data.local.entity.Client
+import com.core2studio.mymanager.data.utils.CurrencyUtils
 import com.core2studio.mymanager.ui.components.MyManagerTopBar
 import com.core2studio.mymanager.ui.screens.clients.AddClientDialog
+import java.util.Locale
 
 private val statusOptions = listOf("PENDING", "PARTIAL", "COMPLETED")
 
@@ -58,20 +66,29 @@ fun AddOrderScreen(
     onSave: (
         clientId: String,
         productName: String,
+        quantity: Int,
+        unitPrice: Double,
         totalAmount: Double,
         paidAmount: Double,
         status: String,
+        paymentMethod: String,
         notes: String,
         customFields: Map<String, String>
-    ) -> Unit = { _, _, _, _, _, _, _ -> }
+    ) -> Unit = { _, _, _, _, _, _, _, _, _, _ -> }
 ) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val currencySymbol = CurrencyUtils.getCurrencySymbol(CurrencyUtils.loadCurrencyCode(context))
     var selectedClient by remember { mutableStateOf<Client?>(null) }
     var clientMenuExpanded by remember { mutableStateOf(false) }
     var showAddClientDialog by remember { mutableStateOf(false) }
 
     var productName by remember { mutableStateOf("") }
+    var quantity by remember { mutableIntStateOf(1) }
+    var unitPrice by remember { mutableStateOf("") }
+    var paymentMethod by remember { mutableStateOf("Cash-in-hand") }
+    var paymentMethodExpanded by remember { mutableStateOf(false) }
 
-    var totalAmount by remember { mutableStateOf("") }
+    val totalAmount = quantity * (unitPrice.toDoubleOrNull() ?: 0.0)
     var paidAmount by remember { mutableStateOf("") }
     var selectedStatus by remember { mutableStateOf("PENDING") }
     var notes by remember { mutableStateOf("") }
@@ -174,44 +191,7 @@ fun AddOrderScreen(
                 )
             }
 
-            // Status chips
-            Text(
-                text = "Status",
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                com.core2studio.mymanager.ui.screens.orders.statusOptions.forEach { status ->
-                    FilterChip(
-                        selected = selectedStatus == status,
-                        onClick = {
-                            selectedStatus = status
-                            when (status) {
-                                "PENDING" -> paidAmount = "0"
-                                "COMPLETED" -> {
-                                    val total = totalAmount.toDoubleOrNull()
-                                    paidAmount = if (total != null && total > 0) totalAmount else "0"
-                                }
-                            }
-                        },
-                        label = { Text(status) },
-                        colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = MaterialTheme.colorScheme.primary,
-                            selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
-                            containerColor = MaterialTheme.colorScheme.surface,
-                            labelColor = MaterialTheme.colorScheme.onSurface
-                        ),
-                        border = FilterChipDefaults.filterChipBorder(
-                            borderColor = MaterialTheme.colorScheme.primary,
-                            selectedBorderColor = MaterialTheme.colorScheme.primary,
-                            enabled = true,
-                            selected = selectedStatus == status
-                        )
-                    )
-                }
-            }
+
 
             // Product name (free text)
             OutlinedTextField(
@@ -223,28 +203,134 @@ fun AddOrderScreen(
                 colors = textFieldColors
             )
 
-            // Amount
+            // Quantity
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp)
+                    .border(
+                        width = 1.dp,
+                        color = MaterialTheme.colorScheme.outline,
+                        shape = RoundedCornerShape(4.dp)
+                    )
+                    .padding(horizontal = 16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Quantity",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(modifier = Modifier.weight(1f))
+                IconButton(
+                    onClick = { if (quantity > 1) quantity-- },
+                    modifier = Modifier.size(32.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Remove,
+                        contentDescription = "Decrease quantity",
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+                Text(
+                    text = quantity.toString(),
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.padding(horizontal = 8.dp)
+                )
+                IconButton(
+                    onClick = { quantity++ },
+                    modifier = Modifier.size(32.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Add,
+                        contentDescription = "Increase quantity",
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+            }
+
+            // Unit Price
             OutlinedTextField(
-                value = totalAmount,
-                onValueChange = {
-                    totalAmount = it
-                    amountError = false
-                    if (selectedStatus == "COMPLETED") {
-                        val total = it.toDoubleOrNull()
-                        paidAmount = if (total != null && total > 0) it else "0"
-                    }
-                },
-                label = { Text("Total Amount") },
+                value = unitPrice,
+                onValueChange = { unitPrice = it },
+                label = { Text("Unit Price") },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
-                isError = amountError,
-                supportingText = if (amountError) {
-                    { Text("Valid amount is required") }
-                } else null,
-                prefix = { Text("\u20B9") },
+                prefix = { Text(currencySymbol) },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                 colors = textFieldColors
             )
+
+            // Total Amount (auto-calculated)
+            OutlinedTextField(
+                value = if (totalAmount > 0) String.format(Locale.getDefault(), "%.2f", totalAmount) else "",
+                onValueChange = {},
+                readOnly = true,
+                label = { Text("Total Amount") },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                prefix = { Text(currencySymbol) },
+                isError = amountError,
+                supportingText = if (amountError) {
+                    { Text("Enter unit price to calculate total") }
+                } else null,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                    cursorColor = MaterialTheme.colorScheme.primary,
+                    focusedLabelColor = MaterialTheme.colorScheme.primary,
+                    disabledTextColor = MaterialTheme.colorScheme.onSurface,
+                    disabledBorderColor = MaterialTheme.colorScheme.outline,
+                    disabledLabelColor = MaterialTheme.colorScheme.outline
+                )
+            )
+
+            // Status chips
+            Text(
+                text = "Status",
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                com.core2studio.mymanager.ui.screens.orders.statusOptions.forEach { status ->
+                    val chipColor = when (status) {
+                        "PENDING" -> Color(0xFFD32F2F)
+                        "PARTIAL" -> Color(0xFFF57C00)
+                        "COMPLETED" -> Color(0xFF388E3C)
+                        else -> MaterialTheme.colorScheme.primary
+                    }
+                    FilterChip(
+                        selected = selectedStatus == status,
+                        onClick = {
+                            selectedStatus = status
+                            when (status) {
+                                "PENDING" -> paidAmount = "0"
+                                "COMPLETED" -> {
+                                    paidAmount = if (totalAmount > 0) totalAmount.toBigDecimal().toPlainString() else "0"
+                                }
+                            }
+                        },
+                        label = { Text(status) },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = chipColor,
+                            selectedLabelColor = Color.White,
+                            containerColor = MaterialTheme.colorScheme.surface,
+                            labelColor = MaterialTheme.colorScheme.onSurface
+                        ),
+                        border = FilterChipDefaults.filterChipBorder(
+                            borderColor = chipColor,
+                            selectedBorderColor = chipColor,
+                            enabled = true,
+                            selected = selectedStatus == status
+                        )
+                    )
+                }
+            }
 
             // Paid Amount
             val isPaidEditable = selectedStatus == "PARTIAL"
@@ -255,7 +341,7 @@ fun AddOrderScreen(
                 label = { Text("Advance Paid Amount") },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
-                prefix = { Text("\u20B9") },
+                prefix = { Text(currencySymbol) },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = MaterialTheme.colorScheme.primary,
@@ -267,6 +353,39 @@ fun AddOrderScreen(
                     disabledLabelColor = MaterialTheme.colorScheme.outline
                 )
             )
+
+            // Payment Method
+            ExposedDropdownMenuBox(
+                expanded = paymentMethodExpanded,
+                onExpandedChange = { paymentMethodExpanded = !paymentMethodExpanded }
+            ) {
+                OutlinedTextField(
+                    value = paymentMethod,
+                    onValueChange = {},
+                    readOnly = true,
+                    label = { Text("Payment Method") },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable),
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = paymentMethodExpanded) },
+                    colors = textFieldColors
+                )
+                ExposedDropdownMenu(
+                    expanded = paymentMethodExpanded,
+                    onDismissRequest = { paymentMethodExpanded = false }
+                ) {
+                    listOf("Cash-in-hand", "UPI", "Bank Transfer").forEach { method ->
+                        DropdownMenuItem(
+                            text = { Text(method) },
+                            onClick = {
+                                paymentMethod = method
+                                paymentMethodExpanded = false
+                            }
+                        )
+                    }
+                }
+            }
+
 
             // Custom Fields
             Text(
@@ -347,8 +466,8 @@ fun AddOrderScreen(
             Button(
                 onClick = {
                     val isClientValid = selectedClient != null
-                    val amountValue = totalAmount.toDoubleOrNull()
-                    val isAmountValid = amountValue != null && amountValue > 0
+                    val unitPriceValue = unitPrice.toDoubleOrNull() ?: 0.0
+                    val isAmountValid = totalAmount > 0
 
                     clientError = !isClientValid
                     amountError = !isAmountValid
@@ -364,13 +483,15 @@ fun AddOrderScreen(
                         onSave(
                             selectedClient!!.id,
                             productName.trim(),
-                            amountValue!!,
+                            quantity,
+                            unitPriceValue,
+                            totalAmount,
                             paidAmount.toDoubleOrNull() ?: 0.0,
                             selectedStatus,
+                            paymentMethod,
                             notes.trim(),
                             customFieldsMap
                         )
-                        onBack()
                     }
                 },
                 modifier = Modifier

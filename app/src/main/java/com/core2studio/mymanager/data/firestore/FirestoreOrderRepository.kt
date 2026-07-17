@@ -8,6 +8,9 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 class FirestoreOrderRepository(
     private val orderDao: OrderDao
@@ -16,6 +19,24 @@ class FirestoreOrderRepository(
 
     private fun userOrdersCollection(uid: String) =
         firestore.collection("users").document(uid).collection("orders")
+
+    private suspend fun generateOrderId(uid: String): String {
+        val profileDoc = firestore.collection("users").document(uid).get().await()
+        val businessName = profileDoc.getString("businessName") ?: "ORD"
+
+        val initials = businessName
+            .split(" ", "-", "_")
+            .filter { it.isNotBlank() }
+            .map { it.first().uppercase() }
+            .joinToString("")
+            .ifEmpty { "ORD" }
+
+        val snapshot = userOrdersCollection(uid).get().await()
+        val nextNumber = snapshot.size() + 1
+
+        val yearMonth = SimpleDateFormat("yyyyMM", Locale.getDefault()).format(Date())
+        return "$initials-$yearMonth-${String.format(Locale.US, "%03d", nextNumber)}"
+    }
 
     fun getAllOrders(uid: String): Flow<List<Order>> = callbackFlow {
         val listener = userOrdersCollection(uid)
@@ -28,16 +49,21 @@ class FirestoreOrderRepository(
                 val orders = snapshot?.documents?.mapNotNull { doc ->
                     Order(
                         id = doc.id,
+                        orderId = doc.getString("orderId") ?: "",
                         clientId = doc.getString("clientId") ?: "",
                         productId = doc.getString("productId"),
                         productName = doc.getString("productName") ?: "",
+                        quantity = (doc.getLong("quantity") ?: 1L).toInt(),
+                        unitPrice = doc.getDouble("unitPrice") ?: 0.0,
                         amount = doc.getDouble("amount") ?: 0.0,
                         paidAmount = doc.getDouble("paidAmount") ?: 0.0,
                         status = doc.getString("status") ?: "PENDING",
+                        paymentMethod = doc.getString("paymentMethod") ?: "",
                         customFields = doc.getString("customFields") ?: "{}",
                         notes = doc.getString("notes") ?: "",
                         date = doc.getLong("date") ?: System.currentTimeMillis(),
-                        createdAt = doc.getLong("createdAt") ?: System.currentTimeMillis()
+                        createdAt = doc.getLong("createdAt") ?: System.currentTimeMillis(),
+                        lastPaymentDate = doc.getLong("lastPaymentDate") ?: 0L
                     )
                 } ?: emptyList()
                 trySend(orders)
@@ -46,26 +72,33 @@ class FirestoreOrderRepository(
     }
 
     suspend fun insertOrder(uid: String, order: Order): Result<String> = runCatching {
+        val generatedOrderId = if (order.id.isEmpty()) generateOrderId(uid) else ""
+
         val docRef = if (order.id.isNotEmpty()) {
             userOrdersCollection(uid).document(order.id)
         } else {
             userOrdersCollection(uid).document()
         }
         val data = mapOf(
+            "orderId" to generatedOrderId,
             "clientId" to order.clientId,
             "productId" to order.productId,
             "productName" to order.productName,
+            "quantity" to order.quantity,
+            "unitPrice" to order.unitPrice,
             "amount" to order.amount,
             "paidAmount" to order.paidAmount,
             "status" to order.status,
+            "paymentMethod" to order.paymentMethod,
             "customFields" to order.customFields,
             "notes" to order.notes,
             "date" to order.date,
-            "createdAt" to order.createdAt
+            "createdAt" to order.createdAt,
+            "lastPaymentDate" to order.lastPaymentDate
         )
         docRef.set(data).await()
         val firestoreId = docRef.id
-        orderDao.insert(order.copy(id = firestoreId))
+        orderDao.insert(order.copy(id = firestoreId, orderId = generatedOrderId))
         firestoreId
     }
 
@@ -75,12 +108,16 @@ class FirestoreOrderRepository(
                 "clientId" to order.clientId,
                 "productId" to order.productId,
                 "productName" to order.productName,
+                "quantity" to order.quantity,
+                "unitPrice" to order.unitPrice,
                 "amount" to order.amount,
                 "paidAmount" to order.paidAmount,
                 "status" to order.status,
+                "paymentMethod" to order.paymentMethod,
                 "customFields" to order.customFields,
                 "notes" to order.notes,
-                "date" to order.date
+                "date" to order.date,
+                "lastPaymentDate" to order.lastPaymentDate
             )
         ).await()
         orderDao.update(order)
@@ -96,16 +133,21 @@ class FirestoreOrderRepository(
         snapshot.documents.mapNotNull { doc ->
             Order(
                 id = doc.id,
+                orderId = doc.getString("orderId") ?: "",
                 clientId = doc.getString("clientId") ?: "",
                 productId = doc.getString("productId"),
                 productName = doc.getString("productName") ?: "",
+                quantity = (doc.getLong("quantity") ?: 1L).toInt(),
+                unitPrice = doc.getDouble("unitPrice") ?: 0.0,
                 amount = doc.getDouble("amount") ?: 0.0,
                 paidAmount = doc.getDouble("paidAmount") ?: 0.0,
                 status = doc.getString("status") ?: "PENDING",
+                paymentMethod = doc.getString("paymentMethod") ?: "",
                 customFields = doc.getString("customFields") ?: "{}",
                 notes = doc.getString("notes") ?: "",
                 date = doc.getLong("date") ?: System.currentTimeMillis(),
-                createdAt = doc.getLong("createdAt") ?: System.currentTimeMillis()
+                createdAt = doc.getLong("createdAt") ?: System.currentTimeMillis(),
+                lastPaymentDate = doc.getLong("lastPaymentDate") ?: 0L
             )
         }
     }

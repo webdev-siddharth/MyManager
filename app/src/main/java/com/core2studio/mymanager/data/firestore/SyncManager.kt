@@ -47,7 +47,13 @@ class SyncManager(
             return Result.failure(e)
         }
 
-        // Phase 3: Commit all to Room in a single transaction
+        // Phase 3: Snapshot current local data, then commit all to Room
+        val backupCategories = database.categoryDao().getAllOnce()
+        val backupClients = database.clientDao().getAllOnce()
+        val backupProducts = database.productDao().getAllOnce()
+        val backupOrders = database.orderDao().getAllOrdersOnce()
+        val backupCartItems = database.cartItemDao().getAllOnce()
+
         return try {
             database.withTransaction {
                 database.categoryDao().deleteAll()
@@ -67,7 +73,18 @@ class SyncManager(
             }
             Result.success(Unit)
         } catch (e: Exception) {
-            Log.e(TAG, "Transaction commit failed", e)
+            Log.e(TAG, "Transaction commit failed, restoring backup", e)
+            try {
+                database.withTransaction {
+                    backupCategories.forEach { database.categoryDao().insert(it) }
+                    backupClients.forEach { database.clientDao().insert(it) }
+                    backupProducts.forEach { database.productDao().insert(it) }
+                    backupOrders.forEach { database.orderDao().insert(it) }
+                    backupCartItems.forEach { database.cartItemDao().insert(it) }
+                }
+            } catch (restoreEx: Exception) {
+                Log.e(TAG, "Backup restore also failed", restoreEx)
+            }
             Result.failure(e)
         }
     }

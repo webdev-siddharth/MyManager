@@ -27,10 +27,16 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -40,6 +46,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.core2studio.mymanager.data.local.entity.CartItem
+import com.core2studio.mymanager.data.utils.CurrencyUtils
 
 import com.core2studio.mymanager.ui.components.EmptyState
 import com.core2studio.mymanager.ui.components.MyManagerTopBar
@@ -53,6 +60,22 @@ fun CartScreen(
 ) {
     val uiState by cartViewModel.uiState.collectAsState()
     val context = LocalContext.current
+    val currencyCode = CurrencyUtils.loadCurrencyCode(context)
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(uiState.errorMessage) {
+        uiState.errorMessage?.let { msg ->
+            val result = snackbarHostState.showSnackbar(
+                message = msg,
+                actionLabel = "Dismiss",
+                duration = SnackbarDuration.Short
+            )
+            if (result == SnackbarResult.ActionPerformed) {
+                cartViewModel.clearError()
+            }
+            cartViewModel.clearError()
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -72,6 +95,7 @@ fun CartScreen(
                 }
             )
         },
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
         if (uiState.cartItems.isEmpty()) {
@@ -101,6 +125,7 @@ fun CartScreen(
                     ) { cartItem ->
                         CartItemCard(
                             cartItem = cartItem,
+                            currencyCode = currencyCode,
                             onIncrement = { cartViewModel.updateQuantity(cartItem, cartItem.quantity + 1) },
                             onDecrement = { cartViewModel.updateQuantity(cartItem, cartItem.quantity - 1) },
                             onRemove = { cartViewModel.removeFromCart(cartItem) }
@@ -126,7 +151,7 @@ fun CartScreen(
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
-                            text = "₹${String.format(Locale.getDefault(), "%.2f", uiState.cartTotal)}",
+                            text = CurrencyUtils.formatCurrency(uiState.cartTotal, currencyCode),
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.primary
@@ -162,6 +187,7 @@ fun CartScreen(
 @Composable
 private fun CartItemCard(
     cartItem: CartItem,
+    currencyCode: String,
     onIncrement: () -> Unit,
     onDecrement: () -> Unit,
     onRemove: () -> Unit
@@ -198,7 +224,7 @@ private fun CartItemCard(
                     fontWeight = FontWeight.Medium
                 )
                 Text(
-                    text = "₹${String.format(Locale.getDefault(), "%.2f", cartItem.price)} each",
+                    text = "${CurrencyUtils.formatCurrency(cartItem.price, currencyCode)} each",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -236,7 +262,7 @@ private fun CartItemCard(
                     }
                 }
                 Text(
-                    text = "₹${String.format(Locale.getDefault(), "%.2f", cartItem.price * cartItem.quantity)}",
+                    text = CurrencyUtils.formatCurrency(cartItem.price * cartItem.quantity, currencyCode),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.primary,
                     fontWeight = FontWeight.SemiBold

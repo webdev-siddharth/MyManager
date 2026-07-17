@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.core2studio.mymanager.data.auth.AuthRepository
 import com.core2studio.mymanager.data.auth.UserProfileRepository
 import com.core2studio.mymanager.data.firestore.SyncManager
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -29,6 +30,7 @@ data class AuthUiState(
     val pendingBusinessPhone: String = "",
     val pendingBusinessAddress: String = "",
     val pendingGstin: String = "",
+    val pendingWebsite: String = "",
     val verificationMessage: String? = null,
     val passwordResetMessage: String? = null
 )
@@ -44,10 +46,18 @@ class AuthViewModel(
 
     init {
         if (authRepository.isSignedIn) {
+            _uiState.value = _uiState.value.copy(
+                displayName = authRepository.displayName ?: "",
+                email = authRepository.userEmail ?: ""
+            )
             viewModelScope.launch {
                 authRepository.reloadUser()
                 if (authRepository.isEmailVerified) {
-                    _uiState.value = _uiState.value.copy(isSignedIn = true)
+                    _uiState.value = _uiState.value.copy(
+                        isSignedIn = true,
+                        displayName = authRepository.displayName ?: "",
+                        email = authRepository.userEmail ?: ""
+                    )
                     syncDataFromFirestore()
                 } else {
                     _uiState.value = _uiState.value.copy(
@@ -95,6 +105,10 @@ class AuthViewModel(
         _uiState.value = _uiState.value.copy(pendingGstin = gstin, error = null)
     }
 
+    fun updatePendingWebsite(website: String) {
+        _uiState.value = _uiState.value.copy(pendingWebsite = website, error = null)
+    }
+
     fun signUp() {
         val state = _uiState.value
         if (state.displayName.isBlank()) {
@@ -130,7 +144,9 @@ class AuthViewModel(
                 }
                 val pendingToken = _uiState.value.pendingGoogleIdToken
                 if (pendingToken != null) {
-                    authRepository.linkGoogleCredential(pendingToken)
+                    authRepository.linkGoogleCredential(pendingToken).onFailure { e ->
+                        android.util.Log.e("AuthViewModel", "Failed to link Google credential", e)
+                    }
                     _uiState.value = _uiState.value.copy(isLoading = false, isSignedIn = true, pendingGoogleIdToken = null)
                 } else {
                     _uiState.value = _uiState.value.copy(
@@ -199,7 +215,9 @@ class AuthViewModel(
                     val userEmail = authRepository.userEmail
                     val name = authRepository.displayName
                     if (uid != null) {
-                        userProfileRepository.createProfile(uid, userEmail ?: "", name ?: "")
+                        userProfileRepository.createProfile(uid, userEmail ?: "", name ?: "").onFailure { e ->
+                            android.util.Log.e("AuthViewModel", "Failed to create profile (Google signup)", e)
+                        }
                     }
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
@@ -214,7 +232,9 @@ class AuthViewModel(
                     val userEmail = authRepository.userEmail
                     val name = authRepository.displayName
                     if (uid != null) {
-                        userProfileRepository.createProfile(uid, userEmail ?: "", name ?: "")
+                        userProfileRepository.createProfile(uid, userEmail ?: "", name ?: "").onFailure { e ->
+                            android.util.Log.e("AuthViewModel", "Failed to create profile (Google login)", e)
+                        }
                     }
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
@@ -365,11 +385,14 @@ class AuthViewModel(
                 businessPhone = state.pendingBusinessPhone,
                 businessAddress = state.pendingBusinessAddress,
                 businessLogoUrl = "",
-                gstin = state.pendingGstin
+                gstin = state.pendingGstin,
+                website = state.pendingWebsite
             )
             result.onSuccess {
                 if (state.isEmailSignupPending) {
-                    authRepository.sendEmailVerification()
+                    authRepository.sendEmailVerification().onFailure { e ->
+                        android.util.Log.e("AuthViewModel", "Failed to send verification email", e)
+                    }
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
                         showBusinessInfoSetup = false,
@@ -406,12 +429,19 @@ class AuthViewModel(
             _uiState.value = _uiState.value.copy(isLoading = true, error = null)
             val result = authRepository.updateDisplayName(newName)
             result.onSuccess {
-                authRepository.reloadUser()
+                authRepository.reloadUser().onFailure { e ->
+                    android.util.Log.e("AuthViewModel", "Failed to reload user after name update", e)
+                }
                 val uid = authRepository.userId
                 if (uid != null) {
-                    userProfileRepository.updateProfile(uid, newName)
+                    userProfileRepository.updateProfile(uid, newName).onFailure { e ->
+                        android.util.Log.e("AuthViewModel", "Failed to update profile name in Firestore", e)
+                    }
                 }
-                _uiState.value = _uiState.value.copy(isLoading = false)
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    displayName = authRepository.displayName ?: newName
+                )
             }.onFailure { e ->
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
@@ -449,7 +479,7 @@ class AuthViewModel(
 
     private fun syncDataFromFirestore() {
         val uid = authRepository.userId ?: return
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             try {
                 syncManager.syncAllFromFirestore(uid)
             } catch (_: Exception) {

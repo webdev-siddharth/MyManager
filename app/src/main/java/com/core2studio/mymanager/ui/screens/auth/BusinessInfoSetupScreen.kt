@@ -147,6 +147,20 @@ fun BusinessInfoSetupScreen(
             placeholder = { Text("Enter GSTIN") }
         )
 
+        Spacer(modifier = Modifier.height(12.dp))
+
+        OutlinedTextField(
+            value = state.pendingWebsite,
+            onValueChange = { viewModel.updatePendingWebsite(it) },
+            label = { Text("Website (optional)") },
+            leadingIcon = { Icon(Icons.Filled.Business, contentDescription = null, tint = MaterialTheme.colorScheme.outline) },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true,
+            colors = textFieldColors,
+            shape = RoundedCornerShape(12.dp),
+            placeholder = { Text("Enter your website URL") }
+        )
+
         state.error?.let { errorText ->
             Spacer(modifier = Modifier.height(8.dp))
             Text(

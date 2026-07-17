@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
   alias(libs.plugins.android.application)
   alias(libs.plugins.compose.compiler)
@@ -11,6 +13,12 @@ if (googleServicesFile.exists()) {
   apply(plugin = "com.google.gms.google-services")
 }
 
+val localProps = Properties()
+val localPropsFile = rootProject.file("local.properties")
+if (localPropsFile.exists()) {
+  localProps.load(localPropsFile.inputStream())
+}
+
 android {
     namespace = "com.core2studio.mymanager"
     compileSdk = 36
@@ -20,11 +28,24 @@ android {
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
+
+        buildConfigField("String", "CLOUDINARY_CLOUD_NAME", "\"${localProps.getProperty("CLOUDINARY_CLOUD_NAME", "")}\"")
+        buildConfigField("String", "CLOUDINARY_UPLOAD_PRESET", "\"${localProps.getProperty("CLOUDINARY_UPLOAD_PRESET", "")}\"")
+    }
+
+    signingConfigs {
+        create("release") {
+            storeFile = file("mymanager-release.jks")
+            storePassword = System.getenv("KEYSTORE_PASSWORD") ?: ""
+            keyAlias = "mymanager"
+            keyPassword = System.getenv("KEYSTORE_PASSWORD") ?: ""
+        }
     }
 
     buildTypes {
         release {
             isMinifyEnabled = false
+            signingConfig = signingConfigs.getByName("release")
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }
@@ -35,7 +56,7 @@ android {
     buildFeatures {
       compose = true
       aidl = false
-      buildConfig = false
+      buildConfig = true
       shaders = false
     }
 

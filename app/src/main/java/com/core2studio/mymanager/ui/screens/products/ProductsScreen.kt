@@ -63,7 +63,7 @@ import com.core2studio.mymanager.ui.components.EmptyState
 import com.core2studio.mymanager.ui.components.MyManagerCard
 import com.core2studio.mymanager.ui.components.MyManagerFAB
 import com.core2studio.mymanager.ui.components.MyManagerTopBar
-import java.util.Locale
+import com.core2studio.mymanager.data.utils.CurrencyUtils
 
 @Composable
 fun ProductsScreen(
@@ -82,6 +82,7 @@ fun ProductsScreen(
     onDeleteProduct: (Product) -> Unit = {},
     onDeleteProducts: (List<Product>) -> Unit = {}
 ) {
+    val context = androidx.compose.ui.platform.LocalContext.current
     var expandedProductId by remember { mutableStateOf<String?>(null) }
     var showDeleteDialog by remember { mutableStateOf<Product?>(null) }
 
@@ -254,7 +255,7 @@ fun ProductsScreen(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
-                                    text = "₹${String.format(Locale.getDefault(), "%.2f", product.price)}",
+                                    text = CurrencyUtils.formatCurrency(product.price, CurrencyUtils.loadCurrencyCode(context)),
                                     style = MaterialTheme.typography.titleMedium,
                                     color = MaterialTheme.colorScheme.primary
                                 )

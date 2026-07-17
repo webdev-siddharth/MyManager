@@ -20,8 +20,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.core2studio.mymanager.data.local.entity.Order
+import com.core2studio.mymanager.data.utils.CurrencyUtils
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -35,6 +37,7 @@ fun OrderDetailDialog(
     onDismiss: () -> Unit,
     onStatusUpdate: (Order) -> Unit
 ) {
+    val context = androidx.compose.ui.platform.LocalContext.current
     var selectedStatus by remember { mutableStateOf(order.status) }
     val dateFormatter = remember { SimpleDateFormat("dd MMM yyyy", Locale.getDefault()) }
 
@@ -66,13 +69,32 @@ fun OrderDetailDialog(
                         color = MaterialTheme.colorScheme.onSurface
                     )
                 }
+                if (order.quantity > 1 || order.unitPrice > 0) {
+                    Text(
+                        text = "Quantity: ${order.quantity}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text = "Unit Price: ${CurrencyUtils.formatCurrency(order.unitPrice, CurrencyUtils.loadCurrencyCode(context))}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+                if (order.paymentMethod.isNotBlank()) {
+                    Text(
+                        text = "Payment: ${order.paymentMethod}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
                 Text(
-                    text = "Amount: \u20B9${String.format(Locale.getDefault(), "%.2f", order.amount)}",
+                    text = "Amount: ${CurrencyUtils.formatCurrency(order.amount, CurrencyUtils.loadCurrencyCode(context))}",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
-                    text = "Paid: \u20B9${String.format(Locale.getDefault(), "%.2f", order.paidAmount)}",
+                    text = "Paid: ${CurrencyUtils.formatCurrency(order.paidAmount, CurrencyUtils.loadCurrencyCode(context))}",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurface
                 )
@@ -98,20 +120,26 @@ fun OrderDetailDialog(
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    com.core2studio.mymanager.ui.screens.orders.statusOptions.forEach { status ->
+                    statusOptions.forEach { status ->
+                        val chipColor = when (status) {
+                            "PENDING" -> Color(0xFFD32F2F)
+                            "PARTIAL" -> Color(0xFFF57C00)
+                            "COMPLETED" -> Color(0xFF388E3C)
+                            else -> MaterialTheme.colorScheme.primary
+                        }
                         FilterChip(
                             selected = selectedStatus == status,
                             onClick = { selectedStatus = status },
                             label = { Text(status) },
                             colors = FilterChipDefaults.filterChipColors(
-                                selectedContainerColor = MaterialTheme.colorScheme.primary,
-                                selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
+                                selectedContainerColor = chipColor,
+                                selectedLabelColor = Color.White,
                                 containerColor = MaterialTheme.colorScheme.surface,
                                 labelColor = MaterialTheme.colorScheme.onSurface
                             ),
                             border = FilterChipDefaults.filterChipBorder(
-                                borderColor = MaterialTheme.colorScheme.primary,
-                                selectedBorderColor = MaterialTheme.colorScheme.primary,
+                                borderColor = chipColor,
+                                selectedBorderColor = chipColor,
                                 enabled = true,
                                 selected = selectedStatus == status
                             )

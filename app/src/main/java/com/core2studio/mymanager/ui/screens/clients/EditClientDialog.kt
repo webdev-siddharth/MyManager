@@ -1,0 +1,146 @@
+package com.core2studio.mymanager.ui.screens.clients
+
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.unit.dp
+import com.core2studio.mymanager.data.local.entity.Client
+
+@Composable
+fun EditClientDialog(
+    client: Client,
+    onDismiss: () -> Unit,
+    onConfirm: (name: String, phone: String, email: String, address: String) -> Unit
+) {
+    var name by remember { mutableStateOf(client.name) }
+    var phone by remember { mutableStateOf(client.phone) }
+    var email by remember { mutableStateOf(client.email) }
+    var address by remember { mutableStateOf(client.address) }
+    var nameError by remember { mutableStateOf(false) }
+    var phoneError by remember { mutableStateOf(false) }
+
+    val textFieldColors = OutlinedTextFieldDefaults.colors(
+        focusedBorderColor = MaterialTheme.colorScheme.primary,
+        unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+        cursorColor = MaterialTheme.colorScheme.primary,
+        focusedLabelColor = MaterialTheme.colorScheme.primary
+    )
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = MaterialTheme.colorScheme.background,
+        shape = RoundedCornerShape(12.dp),
+        tonalElevation = 0.dp,
+        title = {
+            Text(
+                text = "Edit Client",
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+        },
+        text = {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = {
+                        name = it
+                        nameError = false
+                    },
+                    label = { Text("Name *") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    isError = nameError,
+                    supportingText = if (nameError) {
+                        { Text("Name is required") }
+                    } else null,
+                    colors = textFieldColors
+                )
+                OutlinedTextField(
+                    value = phone,
+                    onValueChange = {
+                        phone = it
+                        phoneError = false
+                    },
+                    label = { Text("Phone *") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    isError = phoneError,
+                    supportingText = if (phoneError) {
+                        { Text("Phone is required") }
+                    } else null,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                    colors = textFieldColors
+                )
+                OutlinedTextField(
+                    value = email,
+                    onValueChange = { email = it },
+                    label = { Text("Email") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                    colors = textFieldColors
+                )
+                OutlinedTextField(
+                    value = address,
+                    onValueChange = { address = it },
+                    label = { Text("Address") },
+                    modifier = Modifier.fillMaxWidth(),
+                    maxLines = 3,
+                    colors = textFieldColors
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    if (name.isBlank()) {
+                        nameError = true
+                    } else if (phone.isBlank()) {
+                        phoneError = true
+                    } else {
+                        onConfirm(name.trim(), phone.trim(), email.trim(), address.trim())
+                    }
+                },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
+                ),
+                elevation = ButtonDefaults.buttonElevation(
+                    defaultElevation = 0.dp,
+                    pressedElevation = 0.dp
+                )
+            ) {
+                Text("Save")
+            }
+        },
+        dismissButton = {
+            OutlinedButton(
+                onClick = onDismiss,
+                colors = ButtonDefaults.outlinedButtonColors(
+                    contentColor = MaterialTheme.colorScheme.primary
+                )
+            ) {
+                Text("Cancel")
+            }
+        }
+    )
+}

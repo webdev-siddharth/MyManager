@@ -21,12 +21,12 @@ class FirestoreProductRepository(
     private fun parseProduct(doc: DocumentSnapshot): Product? {
         val name = doc.getString("name") ?: return null
         val imageUrls = when {
-            doc.get("imageUrls") is List<*> -> doc.get("imageUrls") as List<String>
+            doc.get("imageUrls") is List<*> -> (doc.get("imageUrls") as? List<*>)?.filterIsInstance<String>() ?: emptyList()
             doc.getString("imageUri") != null -> listOf(doc.getString("imageUri")!!)
             else -> emptyList()
         }
         val cloudinaryPublicIds = when {
-            doc.get("cloudinaryPublicIds") is List<*> -> doc.get("cloudinaryPublicIds") as List<String>
+            doc.get("cloudinaryPublicIds") is List<*> -> (doc.get("cloudinaryPublicIds") as? List<*>)?.filterIsInstance<String>() ?: emptyList()
             else -> emptyList()
         }
         return Product(

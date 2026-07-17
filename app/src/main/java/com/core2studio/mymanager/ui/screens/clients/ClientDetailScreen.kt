@@ -1,5 +1,7 @@
 package com.core2studio.mymanager.ui.screens.clients
 
+import android.content.Intent
+import android.net.Uri
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -15,10 +17,12 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material3.Button
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -39,6 +43,7 @@ import com.core2studio.mymanager.ui.components.EmptyState
 import com.core2studio.mymanager.ui.components.MyManagerCard
 import com.core2studio.mymanager.ui.components.MyManagerTopBar
 import com.core2studio.mymanager.ui.components.StatusChip
+import com.core2studio.mymanager.data.utils.CurrencyUtils
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -51,7 +56,14 @@ fun ClientDetailScreen(
     transactions: List<Order> = emptyList(),
     onGenerateInvoice: (Order) -> Unit = {},
     invoiceMessage: String? = null,
-    onClearMessage: () -> Unit = {}
+    onClearMessage: () -> Unit = {},
+    invoiceUri: Uri? = null,
+    onClearUri: () -> Unit = {},
+    onEditClient: () -> Unit = {},
+    showEditDialog: Boolean = false,
+    editClient: Client? = null,
+    onDismissEditDialog: () -> Unit = {},
+    onConfirmEdit: (name: String, phone: String, email: String, address: String) -> Unit = { _, _, _, _ -> }
 ) {
     val dateFormatter = remember { SimpleDateFormat("dd MMM yyyy", Locale.getDefault()) }
     val snackbarHostState = remember { SnackbarHostState() }
@@ -64,11 +76,31 @@ fun ClientDetailScreen(
         }
     }
 
+    LaunchedEffect(invoiceUri) {
+        if (invoiceUri != null) {
+            val intent = Intent(Intent.ACTION_VIEW).apply {
+                setDataAndType(invoiceUri, "application/pdf")
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+            context.startActivity(intent)
+            onClearUri()
+        }
+    }
+
     Scaffold(
         topBar = {
             com.core2studio.mymanager.ui.components.MyManagerTopBar(
                 title = client?.name ?: "Client Details",
-                onBackClick = onBack
+                onBackClick = onBack,
+                actions = {
+                    IconButton(onClick = onEditClient) {
+                        Icon(
+                            imageVector = Icons.Filled.Edit,
+                            contentDescription = "Edit Client",
+                            tint = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                }
             )
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },
@@ -180,25 +212,13 @@ fun ClientDetailScreen(
                         ) {
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
-                                    text = "\u20B9${
-                                        String.format(
-                                            Locale.getDefault(),
-                                            "%.2f",
-                                            order.amount
-                                        )
-                                    }",
+                                    text = CurrencyUtils.formatCurrency(order.amount, CurrencyUtils.loadCurrencyCode(context)),
                                     style = MaterialTheme.typography.titleMedium,
                                     color = MaterialTheme.colorScheme.primary
                                 )
                                 if (order.paidAmount < order.amount) {
                                     Text(
-                                        text = "Paid: \u20B9${
-                                            String.format(
-                                                Locale.getDefault(),
-                                                "%.2f",
-                                                order.paidAmount
-                                            )
-                                        }",
+                                        text = "Paid: ${CurrencyUtils.formatCurrency(order.paidAmount, CurrencyUtils.loadCurrencyCode(context))}",
                                         style = MaterialTheme.typography.bodyMedium,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
@@ -243,5 +263,13 @@ fun ClientDetailScreen(
 
             item { Spacer(modifier = Modifier.height(16.dp)) }
         }
+    }
+
+    if (showEditDialog && editClient != null) {
+        EditClientDialog(
+            client = editClient,
+            onDismiss = onDismissEditDialog,
+            onConfirm = onConfirmEdit
+        )
     }
 }

@@ -29,6 +29,7 @@ data class CartUiState(
     val cartCount: Int = 0,
     val cartTotal: Double = 0.0,
     val isLoading: Boolean = false,
+    val isCheckingOut: Boolean = false,
     val checkoutSuccess: Boolean = false,
     val errorMessage: String? = null
 )
@@ -140,11 +141,14 @@ class CartViewModel(
         }
     }
 
-    fun checkout(clientId: String, notes: String, status: String, paidAmount: Double, customFields: Map<String, String>) {
+    fun checkout(clientId: String, notes: String, status: String, paidAmount: Double, paymentMethod: String = "", customFields: Map<String, String>) {
+        if (_uiState.value.isCheckingOut) return
         viewModelScope.launch {
             val uid = authRepository.userId ?: return@launch
             val cartItems = _uiState.value.cartItems
             if (cartItems.isEmpty()) return@launch
+
+            _uiState.value = _uiState.value.copy(isCheckingOut = true)
 
             val totalAmount = cartItems.sumOf { it.price * it.quantity }
             val productNames = cartItems.joinToString(", ") { it.productName }
@@ -162,26 +166,29 @@ class CartViewModel(
 
             val order = Order(
                 clientId = clientId,
-                productName = if (cartItems.size == 1) cartItems.first().productName else "Cart Order ($productNames)",
+                productName = if (cartItems.size == 1) cartItems.first().productName else productNames,
                 amount = totalAmount,
                 paidAmount = paidAmount,
                 status = status,
+                paymentMethod = paymentMethod,
                 customFields = Json.encodeToString(allCustomFields),
                 notes = notes
             )
 
             firestoreOrderRepository.insertOrder(uid, order).onSuccess {
-                firestoreCartRepository.clearCart(uid)
-                _uiState.value = _uiState.value.copy(checkoutSuccess = true)
+                firestoreCartRepository.clearCart(uid).onFailure { e ->
+                    Log.e(TAG, "Failed to clear cart after checkout", e)
+                }
+                _uiState.value = _uiState.value.copy(isCheckingOut = false, checkoutSuccess = true)
             }.onFailure { e ->
                 Log.e(TAG, "Failed to create order from cart", e)
-                _uiState.value = _uiState.value.copy(errorMessage = "Failed to place order: ${e.message}")
+                _uiState.value = _uiState.value.copy(isCheckingOut = false, errorMessage = "Failed to place order: ${e.message}")
             }
         }
     }
 
     fun resetCheckoutSuccess() {
-        _uiState.value = _uiState.value.copy(checkoutSuccess = false)
+        _uiState.value = _uiState.value.copy(checkoutSuccess = false, isCheckingOut = false)
     }
 
     fun clearError() {
@@ -200,7 +207,8 @@ class CartViewModel(
                 businessName = prefs.name,
                 businessEmail = prefs.email,
                 businessPhone = prefs.phone,
-                businessAddress = prefs.address
+                businessAddress = prefs.address,
+                businessWebsite = prefs.website
             )
             _shareUiState.value = _shareUiState.value.copy(shareUri = uri, isSharing = false)
         }
@@ -211,7 +219,7 @@ class CartViewModel(
     }
 
     private suspend fun getBusinessPrefs(context: Context): BusinessPrefs {
-        val uid = authRepository.userId ?: return BusinessPrefs("", "", "", "")
+        val uid = authRepository.userId ?: return BusinessPrefs("", "", "", "", "")
 
         val prefs: SharedPreferences = context.getSharedPreferences(
             "mymanager_settings_$uid",
@@ -222,9 +230,10 @@ class CartViewModel(
         val email = prefs.getString("business_email", "") ?: ""
         val phone = prefs.getString("business_phone", "") ?: ""
         val address = prefs.getString("business_address", "") ?: ""
+        val website = prefs.getString("business_website", "") ?: ""
 
         if (name.isNotBlank() || email.isNotBlank() || phone.isNotBlank() || address.isNotBlank()) {
-            return BusinessPrefs(name, email, phone, address)
+            return BusinessPrefs(name, email, phone, address, website)
         }
 
         return try {
@@ -233,10 +242,11 @@ class CartViewModel(
                 name = profile?.businessName ?: "",
                 email = profile?.businessEmail ?: "",
                 phone = profile?.businessPhone ?: "",
-                address = profile?.businessAddress ?: ""
+                address = profile?.businessAddress ?: "",
+                website = profile?.website ?: ""
             )
         } catch (e: Exception) {
-            BusinessPrefs("", "", "", "")
+            BusinessPrefs("", "", "", "", "")
         }
     }
 
@@ -244,7 +254,8 @@ class CartViewModel(
         val name: String,
         val email: String,
         val phone: String,
-        val address: String
+        val address: String,
+        val website: String
     )
 
     companion object {

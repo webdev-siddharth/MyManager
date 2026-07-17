@@ -78,7 +78,7 @@ fun SettingsScreen(
                         tint = if (accountEmail != null) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline
                     )
                     Text(
-                        text = "Google Account",
+                        text = "Account",
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.onSurface
                     )

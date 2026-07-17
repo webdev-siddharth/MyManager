@@ -21,6 +21,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuAnchorType
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.FilterChip
@@ -45,10 +46,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.core2studio.mymanager.data.local.entity.Client
+import com.core2studio.mymanager.data.utils.CurrencyUtils
 
 import com.core2studio.mymanager.ui.components.MyManagerTopBar
 import com.core2studio.mymanager.ui.screens.clients.AddClientDialog
@@ -64,6 +67,7 @@ fun CheckoutScreen(
     onBack: () -> Unit,
     onAddClient: (name: String, phone: String, email: String, address: String) -> Unit = { _, _, _, _ -> }
 ) {
+    val context = androidx.compose.ui.platform.LocalContext.current
     val uiState by cartViewModel.uiState.collectAsState()
 
     var selectedClient by remember { mutableStateOf<Client?>(null) }
@@ -71,6 +75,8 @@ fun CheckoutScreen(
     var showAddClientDialog by remember { mutableStateOf(false) }
     var selectedStatus by remember { mutableStateOf("PENDING") }
     var paidAmount by remember { mutableStateOf("") }
+    var paymentMethod by remember { mutableStateOf("Cash-in-hand") }
+    var paymentMethodExpanded by remember { mutableStateOf(false) }
     var notes by remember { mutableStateOf("") }
     var clientError by remember { mutableStateOf(false) }
     var showSuccessDialog by remember { mutableStateOf(false) }
@@ -212,7 +218,7 @@ fun CheckoutScreen(
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
-                        text = "₹${String.format(Locale.getDefault(), "%.2f", item.price * item.quantity)}",
+                        text = CurrencyUtils.formatCurrency(item.price * item.quantity, CurrencyUtils.loadCurrencyCode(context)),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurface
                     )
@@ -232,7 +238,7 @@ fun CheckoutScreen(
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
-                    text = "₹${String.format(Locale.getDefault(), "%.2f", uiState.cartTotal)}",
+                    text = CurrencyUtils.formatCurrency(uiState.cartTotal, CurrencyUtils.loadCurrencyCode(context)),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary
@@ -249,6 +255,12 @@ fun CheckoutScreen(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 statusOptions.forEach { status ->
+                    val chipColor = when (status) {
+                        "PENDING" -> Color(0xFFD32F2F)
+                        "PARTIAL" -> Color(0xFFF57C00)
+                        "COMPLETED" -> Color(0xFF388E3C)
+                        else -> MaterialTheme.colorScheme.primary
+                    }
                     FilterChip(
                         selected = selectedStatus == status,
                         onClick = {
@@ -262,14 +274,14 @@ fun CheckoutScreen(
                         },
                         label = { Text(status) },
                         colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = MaterialTheme.colorScheme.primary,
-                            selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
+                            selectedContainerColor = chipColor,
+                            selectedLabelColor = Color.White,
                             containerColor = MaterialTheme.colorScheme.surface,
                             labelColor = MaterialTheme.colorScheme.onSurface
                         ),
                         border = FilterChipDefaults.filterChipBorder(
-                            borderColor = MaterialTheme.colorScheme.primary,
-                            selectedBorderColor = MaterialTheme.colorScheme.primary,
+                            borderColor = chipColor,
+                            selectedBorderColor = chipColor,
                             enabled = true,
                             selected = selectedStatus == status
                         )
@@ -286,7 +298,7 @@ fun CheckoutScreen(
                 label = { Text("Advance Paid Amount") },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
-                prefix = { Text("₹") },
+                prefix = { Text(CurrencyUtils.getCurrencySymbol(CurrencyUtils.loadCurrencyCode(context))) },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = MaterialTheme.colorScheme.primary,
@@ -298,6 +310,38 @@ fun CheckoutScreen(
                     disabledLabelColor = MaterialTheme.colorScheme.outline
                 )
             )
+
+            // Payment Method
+            ExposedDropdownMenuBox(
+                expanded = paymentMethodExpanded,
+                onExpandedChange = { paymentMethodExpanded = !paymentMethodExpanded }
+            ) {
+                OutlinedTextField(
+                    value = paymentMethod,
+                    onValueChange = {},
+                    readOnly = true,
+                    label = { Text("Payment Method") },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable),
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = paymentMethodExpanded) },
+                    colors = textFieldColors
+                )
+                ExposedDropdownMenu(
+                    expanded = paymentMethodExpanded,
+                    onDismissRequest = { paymentMethodExpanded = false }
+                ) {
+                    listOf("Cash-in-hand", "UPI", "Bank Transfer").forEach { method ->
+                        DropdownMenuItem(
+                            text = { Text(method) },
+                            onClick = {
+                                paymentMethod = method
+                                paymentMethodExpanded = false
+                            }
+                        )
+                    }
+                }
+            }
 
             // Custom Fields
             Text(
@@ -393,6 +437,7 @@ fun CheckoutScreen(
                             notes = notes.trim(),
                             status = selectedStatus,
                             paidAmount = paidAmount.toDoubleOrNull() ?: 0.0,
+                            paymentMethod = paymentMethod,
                             customFields = customFieldsMap
                         )
                     }

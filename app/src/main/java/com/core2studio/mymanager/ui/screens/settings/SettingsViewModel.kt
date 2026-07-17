@@ -8,10 +8,12 @@ import androidx.lifecycle.viewModelScope
 import com.core2studio.mymanager.data.auth.AuthRepository
 import com.core2studio.mymanager.data.auth.UserProfileRepository
 import com.core2studio.mymanager.data.storage.CloudinaryStorage
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlin.text.ifEmpty
 
 data class SettingsUiState(
@@ -21,10 +23,12 @@ data class SettingsUiState(
     val businessAddress: String = "",
     val businessLogoUrl: String = "",
     val gstin: String = "",
+    val website: String = "",
     val accountEmail: String? = null,
     val message: String? = null,
     val isUploadingLogo: Boolean = false,
-    val themeMode: Int = 0
+    val themeMode: Int = 0,
+    val currencyCode: String = com.core2studio.mymanager.data.utils.CurrencyUtils.DEFAULT_CURRENCY
 )
 
 class SettingsViewModel(
@@ -42,6 +46,7 @@ class SettingsViewModel(
         private const val KEY_BUSINESS_ADDRESS = "business_address"
         private const val KEY_BUSINESS_LOGO_URL = "business_logo_url"
         private const val KEY_BUSINESS_GSTIN = "business_gstin"
+        private const val KEY_WEBSITE = "business_website"
     }
 
     private var currentPrefs: SharedPreferences? = null
@@ -58,33 +63,41 @@ class SettingsViewModel(
             return
         }
 
-        val userPrefs = context.getSharedPreferences("$PREFS_PREFIX$uid", Context.MODE_PRIVATE)
-        currentPrefs = userPrefs
-
-        _uiState.value = _uiState.value.copy(
-            businessName = userPrefs.getString(KEY_BUSINESS_NAME, "") ?: "",
-            businessEmail = userPrefs.getString(KEY_BUSINESS_EMAIL, "") ?: "",
-            businessPhone = userPrefs.getString(KEY_BUSINESS_PHONE, "") ?: "",
-            businessAddress = userPrefs.getString(KEY_BUSINESS_ADDRESS, "") ?: "",
-            businessLogoUrl = userPrefs.getString(KEY_BUSINESS_LOGO_URL, "") ?: "",
-            gstin = userPrefs.getString(KEY_BUSINESS_GSTIN, "") ?: "",
-            accountEmail = authRepository.userEmail,
-            themeMode = context.getSharedPreferences("mymanager_theme", Context.MODE_PRIVATE)
-                .getInt("theme_mode", 0)
-        )
-
         viewModelScope.launch {
-            val profile = userProfileRepository.getProfile(uid)
-            if (profile != null) {
-                _uiState.value = _uiState.value.copy(
-                    businessName = profile.businessName.ifEmpty { _uiState.value.businessName },
-                    businessEmail = profile.businessEmail.ifEmpty { _uiState.value.businessEmail },
-                    businessPhone = profile.businessPhone.ifEmpty { _uiState.value.businessPhone },
-                    businessAddress = profile.businessAddress.ifEmpty { _uiState.value.businessAddress },
-                    businessLogoUrl = profile.businessLogoUrl.ifEmpty { _uiState.value.businessLogoUrl },
-                    gstin = profile.gstin.ifEmpty { _uiState.value.gstin }
+            val prefsState = withContext(Dispatchers.IO) {
+                val userPrefs = context.getSharedPreferences("$PREFS_PREFIX$uid", Context.MODE_PRIVATE)
+                currentPrefs = userPrefs
+
+                val baseState = SettingsUiState(
+                    businessName = userPrefs.getString(KEY_BUSINESS_NAME, "") ?: "",
+                    businessEmail = userPrefs.getString(KEY_BUSINESS_EMAIL, "") ?: "",
+                    businessPhone = userPrefs.getString(KEY_BUSINESS_PHONE, "") ?: "",
+                    businessAddress = userPrefs.getString(KEY_BUSINESS_ADDRESS, "") ?: "",
+                    businessLogoUrl = userPrefs.getString(KEY_BUSINESS_LOGO_URL, "") ?: "",
+                    gstin = userPrefs.getString(KEY_BUSINESS_GSTIN, "") ?: "",
+                    website = userPrefs.getString(KEY_WEBSITE, "") ?: "",
+                    accountEmail = authRepository.userEmail,
+                    themeMode = context.getSharedPreferences("mymanager_theme", Context.MODE_PRIVATE)
+                        .getInt("theme_mode", 0),
+                    currencyCode = com.core2studio.mymanager.data.utils.CurrencyUtils.loadCurrencyCode(context)
                 )
+
+                val profile = userProfileRepository.getProfile(uid)
+                if (profile != null) {
+                    baseState.copy(
+                        businessName = profile.businessName.ifEmpty { baseState.businessName },
+                        businessEmail = profile.businessEmail.ifEmpty { baseState.businessEmail },
+                        businessPhone = profile.businessPhone.ifEmpty { baseState.businessPhone },
+                        businessAddress = profile.businessAddress.ifEmpty { baseState.businessAddress },
+                        businessLogoUrl = profile.businessLogoUrl.ifEmpty { baseState.businessLogoUrl },
+                        gstin = profile.gstin.ifEmpty { baseState.gstin },
+                        website = profile.website.ifEmpty { baseState.website }
+                    )
+                } else {
+                    baseState
+                }
             }
+            _uiState.value = prefsState
         }
     }
 
@@ -94,7 +107,8 @@ class SettingsViewModel(
         phone: String,
         address: String,
         logoUrl: String = _uiState.value.businessLogoUrl,
-        gstin: String = ""
+        gstin: String = "",
+        website: String = ""
     ) {
         _uiState.value = _uiState.value.copy(
             businessName = name,
@@ -102,7 +116,8 @@ class SettingsViewModel(
             businessPhone = phone,
             businessAddress = address,
             businessLogoUrl = logoUrl,
-            gstin = gstin
+            gstin = gstin,
+            website = website
         )
 
         currentPrefs?.edit()
@@ -112,12 +127,16 @@ class SettingsViewModel(
             ?.putString(KEY_BUSINESS_ADDRESS, address)
             ?.putString(KEY_BUSINESS_LOGO_URL, logoUrl)
             ?.putString(KEY_BUSINESS_GSTIN, gstin)
+            ?.putString(KEY_WEBSITE, website)
             ?.apply()
 
         val uid = authRepository.userId
         if (uid != null) {
             viewModelScope.launch {
-                userProfileRepository.saveBusinessInfo(uid, name, email, phone, address, logoUrl, gstin)
+                userProfileRepository.saveBusinessInfo(uid, name, email, phone, address, logoUrl, gstin, website)
+                    .onFailure { e ->
+                        android.util.Log.e("SettingsViewModel", "Failed to save business info", e)
+                    }
             }
         }
     }
@@ -127,13 +146,11 @@ class SettingsViewModel(
             val uid = authRepository.userId ?: return@launch
             _uiState.value = _uiState.value.copy(isUploadingLogo = true)
             val result = cloudinaryStorage.uploadImage(uri, context, uid)
-            if (result != null) {
-                val url = result.first
+            result.onSuccess { (url, _) ->
                 _uiState.value = _uiState.value.copy(
                     businessLogoUrl = url,
                     isUploadingLogo = false
                 )
-                // Persist the new logo URL
                 currentPrefs?.edit()
                     ?.putString(KEY_BUSINESS_LOGO_URL, url)
                     ?.apply()
@@ -144,12 +161,13 @@ class SettingsViewModel(
                     _uiState.value.businessPhone,
                     _uiState.value.businessAddress,
                     url,
-                    _uiState.value.gstin
+                    _uiState.value.gstin,
+                    _uiState.value.website
                 )
-            } else {
+            }.onFailure { e ->
                 _uiState.value = _uiState.value.copy(
                     isUploadingLogo = false,
-                    message = "Failed to upload logo"
+                    message = "Failed to upload logo: ${e.message}"
                 )
             }
         }
@@ -170,8 +188,11 @@ class SettingsViewModel(
                     _uiState.value.businessPhone,
                     _uiState.value.businessAddress,
                     "",
-                    _uiState.value.gstin
-                )
+                    _uiState.value.gstin,
+                    _uiState.value.website
+                ).onFailure { e ->
+                    android.util.Log.e("SettingsViewModel", "Failed to save business info after logo clear", e)
+                }
             }
         }
     }
@@ -182,6 +203,7 @@ class SettingsViewModel(
     fun getBusinessAddress(): String = _uiState.value.businessAddress
     fun getBusinessLogoUrl(): String = _uiState.value.businessLogoUrl
     fun getGstin(): String = _uiState.value.gstin
+    fun getWebsite(): String = _uiState.value.website
 
     fun signOut() {
         _uiState.value = SettingsUiState(accountEmail = null)
@@ -200,5 +222,12 @@ class SettingsViewModel(
             .edit()
             .putInt("theme_mode", mode)
             .apply()
+    }
+
+    fun saveCurrency(code: String) {
+        _uiState.value = _uiState.value.copy(currencyCode = code)
+        val app = context.applicationContext as com.core2studio.mymanager.MyManagerApplication
+        app.currencyCode.value = code
+        com.core2studio.mymanager.data.utils.CurrencyUtils.saveCurrencyCode(context, code)
     }
 }

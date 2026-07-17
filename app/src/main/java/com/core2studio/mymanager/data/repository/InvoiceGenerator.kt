@@ -6,11 +6,14 @@ import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.Typeface
 import android.graphics.pdf.PdfDocument
+import android.net.Uri
 import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
+import androidx.core.content.FileProvider
 import com.core2studio.mymanager.data.local.entity.Client
 import com.core2studio.mymanager.data.local.entity.Order
+import com.core2studio.mymanager.data.utils.CurrencyUtils
 import kotlinx.serialization.json.Json
 import java.io.File
 import java.io.FileOutputStream
@@ -25,6 +28,11 @@ import java.util.Locale
 class InvoiceGenerator(
     private val context: Context
 ) {
+
+    data class InvoiceResult(
+        val fileName: String,
+        val uri: Uri
+    )
 
     companion object {
         private const val PAGE_WIDTH = 595  // A4 width in points
@@ -45,14 +53,14 @@ class InvoiceGenerator(
     // Paint objects
     private val titlePaint = Paint().apply {
         color = forestGreen
-        textSize = 24f
+        textSize = 28f
         typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
         isAntiAlias = true
     }
 
     private val headingPaint = Paint().apply {
         color = deepSlate
-        textSize = 16f
+        textSize = 18f
         typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
         isAntiAlias = true
     }
@@ -106,7 +114,8 @@ class InvoiceGenerator(
      * @param businessEmail The business email from settings
      * @param businessPhone The business phone from settings
      * @param businessAddress The business address from settings
-     * @return The file name of the generated PDF, or null on failure
+     * @param businessWebsite The business website from settings
+     * @return InvoiceResult with file name and content URI, or null on failure
      */
     fun generateInvoice(
         transaction: Order,
@@ -115,8 +124,9 @@ class InvoiceGenerator(
         businessName: String,
         businessEmail: String = "",
         businessPhone: String = "",
-        businessAddress: String = ""
-    ): String? {
+        businessAddress: String = "",
+        businessWebsite: String = ""
+    ): InvoiceResult? {
         val document = PdfDocument()
         val pageInfo = PdfDocument.PageInfo.Builder(PAGE_WIDTH, PAGE_HEIGHT, 1).create()
         val page = document.startPage(pageInfo)
@@ -125,11 +135,11 @@ class InvoiceGenerator(
         var y = MARGIN + 10f
 
         // --- Header Background ---
-        canvas.drawRect(0f, 0f, PAGE_WIDTH.toFloat(), 160f, bgPaint)
+        canvas.drawRect(0f, 0f, PAGE_WIDTH.toFloat(), 175f, bgPaint)
 
         // --- Business Name / Title ---
         canvas.drawText(businessName.ifEmpty { "MyManager" }, MARGIN, y + 20f, titlePaint)
-        y += 30f
+        y += 40f
 
         // --- Business Contact Info ---
         if (businessPhone.isNotBlank()) {
@@ -144,7 +154,11 @@ class InvoiceGenerator(
             canvas.drawText("Address: $businessAddress", MARGIN, y, bodyPaint)
             y += LINE_HEIGHT
         }
-        if (businessPhone.isNotBlank() || businessEmail.isNotBlank() || businessAddress.isNotBlank()) {
+        if (businessWebsite.isNotBlank()) {
+            canvas.drawText("Website: $businessWebsite", MARGIN, y, bodyPaint)
+            y += LINE_HEIGHT
+        }
+        if (businessPhone.isNotBlank() || businessEmail.isNotBlank() || businessAddress.isNotBlank() || businessWebsite.isNotBlank()) {
             y += 10f
         }
 
@@ -157,12 +171,21 @@ class InvoiceGenerator(
         y += 20f
         val dateFormat = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
         val invoiceDate = dateFormat.format(Date(transaction.date))
-        val invoiceNumber = "INV-${transaction.id.toString().padStart(5, '0')}"
+        val yearMonth = SimpleDateFormat("yyyyMM", Locale.getDefault()).format(Date(transaction.date))
+        val seq = String.format(Locale.US, "%04d", kotlin.math.abs(transaction.id.hashCode() % 10000))
+        val invoiceNumber = "$yearMonth-$seq"
 
-        canvas.drawText("Invoice #: $invoiceNumber", MARGIN, y, bodyPaint)
-        val dateText = "Date: $invoiceDate"
-        val dateWidth = bodyPaint.measureText(dateText)
-        canvas.drawText(dateText, PAGE_WIDTH - MARGIN - dateWidth, y, bodyPaint)
+        canvas.drawText("Date: $invoiceDate", MARGIN, y, bodyPaint)
+        val invoiceText = "Invoice #: $invoiceNumber"
+        val invoiceTextWidth = bodyPaint.measureText(invoiceText)
+        canvas.drawText(invoiceText, PAGE_WIDTH - MARGIN - invoiceTextWidth, y, bodyPaint)
+
+        if (transaction.orderId.isNotBlank()) {
+            y += 16f
+            val orderIdText = "Order ID: ${transaction.orderId}"
+            val orderIdTextWidth = bodyPaint.measureText(orderIdText)
+            canvas.drawText(orderIdText, PAGE_WIDTH - MARGIN - orderIdTextWidth, y, bodyPaint)
+        }
 
         y += 30f
 
@@ -171,7 +194,7 @@ class InvoiceGenerator(
         y += 20f
 
         // --- Client Details ---
-        canvas.drawText("BILL TO", MARGIN, y, smallPaint)
+        canvas.drawText("BILL TO:", MARGIN, y, smallPaint)
         y += LINE_HEIGHT
         canvas.drawText(client.name, MARGIN, y, headingPaint)
         y += LINE_HEIGHT
@@ -195,50 +218,110 @@ class InvoiceGenerator(
         canvas.drawLine(MARGIN, y, PAGE_WIDTH - MARGIN, y, linePaint)
         y += 20f
 
-        // --- Line Items Table Header ---
-        val col1 = MARGIN
-        val col2 = MARGIN + 250f
-        val col3 = MARGIN + 370f
-        val col4 = PAGE_WIDTH - MARGIN
-
-        // Table header background
-        canvas.drawRect(MARGIN - 5f, y - 14f, PAGE_WIDTH - MARGIN + 5f, y + 6f, bgPaint)
-
-        canvas.drawText("ITEM", col1, y, boldBodyPaint)
-        canvas.drawText("DETAILS", col2, y, boldBodyPaint)
-        val amtHeader = "AMOUNT"
-        val amtHeaderWidth = boldBodyPaint.measureText(amtHeader)
-        canvas.drawText(amtHeader, col4 - amtHeaderWidth, y, boldBodyPaint)
-
-        y += LINE_HEIGHT + 5f
-
-        // --- Product Line ---
-        if (productName != null) {
-            canvas.drawText(productName, col1, y, bodyPaint)
-            val amtText = "₹${String.format("%.2f", transaction.amount)}"
-            val amtWidth = bodyPaint.measureText(amtText)
-            canvas.drawText(amtText, col4 - amtWidth, y, bodyPaint)
-            y += LINE_HEIGHT
-        } else {
-            canvas.drawText("Service/Custom", col1, y, bodyPaint)
-            val amtText = "₹${String.format("%.2f", transaction.amount)}"
-            val amtWidth = bodyPaint.measureText(amtText)
-            canvas.drawText(amtText, col4 - amtWidth, y, bodyPaint)
-            y += LINE_HEIGHT
-        }
-
-        // --- Custom Fields as line items ---
+        // --- Line Items Table ---
         val customFields = parseCustomFields(transaction.customFields)
-        customFields.forEach { (key, value) ->
-            canvas.drawText(key, col1 + 10f, y, smallPaint)
-            canvas.drawText(value, col2, y, bodyPaint)
+        val cartItemsJson = customFields["cartItems"]
+
+        if (cartItemsJson != null) {
+            // Cart-based order: show each item as a row
+            val cartItems = parseCartItems(cartItemsJson)
+            if (cartItems.isNotEmpty()) {
+                val itemCol = MARGIN
+                val qtyCol = MARGIN + 230f
+                val priceCol = MARGIN + 300f
+                val amtCol = PAGE_WIDTH - MARGIN
+
+                // Table header background
+                canvas.drawRect(MARGIN - 5f, y - 14f, PAGE_WIDTH - MARGIN + 5f, y + 6f, bgPaint)
+                canvas.drawText("ITEM", itemCol, y, boldBodyPaint)
+                canvas.drawText("QTY", qtyCol, y, boldBodyPaint)
+                canvas.drawText("PRICE", priceCol, y, boldBodyPaint)
+                val amtHeader = "AMOUNT"
+                canvas.drawText(amtHeader, amtCol - boldBodyPaint.measureText(amtHeader), y, boldBodyPaint)
+                y += LINE_HEIGHT + 5f
+
+                // Cart item rows
+                for (item in cartItems) {
+                    canvas.drawText(item.name, itemCol, y, bodyPaint)
+                    canvas.drawText("${item.quantity}", qtyCol, y, bodyPaint)
+                    val priceText = CurrencyUtils.formatCurrency(item.price, CurrencyUtils.loadCurrencyCode(context))
+                    canvas.drawText(priceText, priceCol, y, bodyPaint)
+                    val amtText = CurrencyUtils.formatCurrency(item.subtotal, CurrencyUtils.loadCurrencyCode(context))
+                    canvas.drawText(amtText, amtCol - bodyPaint.measureText(amtText), y, bodyPaint)
+                    y += LINE_HEIGHT
+                }
+
+                // Subtotal line
+                y += 5f
+                canvas.drawLine(MARGIN, y, PAGE_WIDTH - MARGIN, y, linePaint)
+                y += 15f
+                canvas.drawText("Subtotal", itemCol, y, boldBodyPaint)
+                val subtotalText = CurrencyUtils.formatCurrency(transaction.amount, CurrencyUtils.loadCurrencyCode(context))
+                canvas.drawText(subtotalText, amtCol - amountPaint.measureText(subtotalText), y, amountPaint)
+                y += LINE_HEIGHT
+
+                // Other custom fields (excluding cartItems)
+                val otherFields = customFields.filterKeys { it != "cartItems" }
+                if (otherFields.isNotEmpty()) {
+                    y += 10f
+                    canvas.drawLine(MARGIN, y, PAGE_WIDTH - MARGIN, y, linePaint)
+                    y += 15f
+                    canvas.drawText("Additional Details", MARGIN, y, boldBodyPaint)
+                    y += LINE_HEIGHT
+                    for ((key, value) in otherFields) {
+                        canvas.drawText(key, MARGIN + 10f, y, smallPaint)
+                        canvas.drawText(value, MARGIN + 130f, y, bodyPaint)
+                        y += LINE_HEIGHT
+                    }
+                }
+            }
+        } else {
+            // Manual order: same ITEM | QTY | PRICE | AMOUNT format
+            val itemCol = MARGIN
+            val qtyCol = MARGIN + 230f
+            val priceCol = MARGIN + 300f
+            val amtCol = PAGE_WIDTH - MARGIN
+
+            // Table header background
+            canvas.drawRect(MARGIN - 5f, y - 14f, PAGE_WIDTH - MARGIN + 5f, y + 6f, bgPaint)
+            canvas.drawText("ITEM", itemCol, y, boldBodyPaint)
+            canvas.drawText("QTY", qtyCol, y, boldBodyPaint)
+            canvas.drawText("PRICE", priceCol, y, boldBodyPaint)
+            val amtHeader = "AMOUNT"
+            canvas.drawText(amtHeader, amtCol - boldBodyPaint.measureText(amtHeader), y, boldBodyPaint)
+            y += LINE_HEIGHT + 5f
+
+            // Product row
+            val displayName = productName ?: "Service/Custom"
+            canvas.drawText(displayName, itemCol, y, bodyPaint)
+            canvas.drawText("${transaction.quantity}", qtyCol, y, bodyPaint)
+            val unitPriceText = CurrencyUtils.formatCurrency(transaction.unitPrice, CurrencyUtils.loadCurrencyCode(context))
+            canvas.drawText(unitPriceText, priceCol, y, bodyPaint)
+            val amtText = CurrencyUtils.formatCurrency(transaction.amount, CurrencyUtils.loadCurrencyCode(context))
+            canvas.drawText(amtText, amtCol - bodyPaint.measureText(amtText), y, bodyPaint)
+            y += LINE_HEIGHT
+
+            // Custom fields
+            customFields.forEach { (key, value) ->
+                canvas.drawText(key, itemCol + 10f, y, smallPaint)
+                canvas.drawText(value, qtyCol, y, bodyPaint)
+                y += LINE_HEIGHT
+            }
+
+            // Subtotal line
+            y += 5f
+            canvas.drawLine(MARGIN, y, PAGE_WIDTH - MARGIN, y, linePaint)
+            y += 15f
+            canvas.drawText("Subtotal", itemCol, y, boldBodyPaint)
+            val subtotalText = CurrencyUtils.formatCurrency(transaction.amount, CurrencyUtils.loadCurrencyCode(context))
+            canvas.drawText(subtotalText, amtCol - amountPaint.measureText(subtotalText), y, amountPaint)
             y += LINE_HEIGHT
         }
 
         // --- Notes ---
         if (transaction.notes.isNotBlank()) {
             y += 5f
-            canvas.drawText("Notes: ${transaction.notes}", col1 + 10f, y, smallPaint)
+            canvas.drawText("Notes: ${transaction.notes}", MARGIN + 10f, y, smallPaint)
             y += LINE_HEIGHT
         }
 
@@ -250,31 +333,19 @@ class InvoiceGenerator(
 
         // --- Totals Section ---
         val totalsX = PAGE_WIDTH - MARGIN - 200f
+        val rightEdge = PAGE_WIDTH - MARGIN
 
-        canvas.drawText("Total Amount:", totalsX, y, boldBodyPaint)
-        val totalText = "₹${String.format("%.2f", transaction.amount)}"
-        val totalWidth = amountPaint.measureText(totalText)
-        canvas.drawText(totalText, col4 - totalWidth, y, amountPaint)
-        y += LINE_HEIGHT + 5f
+        // Payment Method on LEFT side (aligned with Total Amount)
+        var statusBadgeY = -1f
+        if (transaction.paymentMethod.isNotBlank()) {
+            canvas.drawText("Payment Method:", MARGIN, y, bodyPaint)
+            canvas.drawText(transaction.paymentMethod, MARGIN, y + LINE_HEIGHT, boldBodyPaint)
+            statusBadgeY = y + LINE_HEIGHT + 28f
+        } else {
+            statusBadgeY = y + 5f
+        }
 
-        canvas.drawText("Amount Paid:", totalsX, y, bodyPaint)
-        val paidText = "₹${String.format("%.2f", transaction.paidAmount)}"
-        val paidWidth = bodyPaint.measureText(paidText)
-        canvas.drawText(paidText, col4 - paidWidth, y, bodyPaint)
-        y += LINE_HEIGHT + 5f
-
-        val balance = transaction.amount - transaction.paidAmount
-        val balancePaint = if (balance > 0) Paint(amountPaint).apply {
-            color = android.graphics.Color.parseColor("#E74C3C")
-        } else amountPaint
-
-        canvas.drawText("Balance Due:", totalsX, y, boldBodyPaint)
-        val balanceText = "₹${String.format("%.2f", balance)}"
-        val balanceWidth = balancePaint.measureText(balanceText)
-        canvas.drawText(balanceText, col4 - balanceWidth, y, balancePaint)
-        y += LINE_HEIGHT + 15f
-
-        // --- Status Badge ---
+        // --- Status Badge (left side, below Payment Method) ---
         val statusText = when (transaction.status) {
             "COMPLETED" -> "PAID"
             "PARTIAL" -> "PARTIALLY PAID"
@@ -286,7 +357,7 @@ class InvoiceGenerator(
                 "PARTIAL" -> sageGreen
                 else -> android.graphics.Color.parseColor("#E74C3C")
             }
-            textSize = 14f
+            textSize = 16f
         }
         val statusBgPaint = Paint().apply {
             color = when (transaction.status) {
@@ -296,17 +367,37 @@ class InvoiceGenerator(
             }
             style = Paint.Style.FILL
         }
-
         val statusWidth = statusPaint.measureText(statusText)
-        val statusX = PAGE_WIDTH - MARGIN - statusWidth - 20f
-        canvas.drawRect(statusX - 10f, y - 14f, PAGE_WIDTH - MARGIN + 5f, y + 8f, statusBgPaint)
-        canvas.drawText(statusText, statusX, y, statusPaint)
+        val statusX = MARGIN
+        canvas.drawRect(statusX, statusBadgeY - 16f, statusX + statusWidth + 10f, statusBadgeY + 6f, statusBgPaint)
+        canvas.drawText(statusText, statusX, statusBadgeY, statusPaint)
 
-        y += 40f
+        canvas.drawText("Total Amount:", totalsX, y, boldBodyPaint)
+        val totalText = CurrencyUtils.formatCurrency(transaction.amount, CurrencyUtils.loadCurrencyCode(context))
+        val totalWidth = amountPaint.measureText(totalText)
+        canvas.drawText(totalText, rightEdge - totalWidth, y, amountPaint)
+        y += LINE_HEIGHT + 5f
+
+        canvas.drawText("Amount Paid:", totalsX, y, bodyPaint)
+        val paidText = CurrencyUtils.formatCurrency(transaction.paidAmount, CurrencyUtils.loadCurrencyCode(context))
+        val paidWidth = bodyPaint.measureText(paidText)
+        canvas.drawText(paidText, rightEdge - paidWidth, y, bodyPaint)
+        y += LINE_HEIGHT + 5f
+
+        val balance = transaction.amount - transaction.paidAmount
+        val balancePaint = if (balance > 0) Paint(amountPaint).apply {
+            color = android.graphics.Color.parseColor("#E74C3C")
+        } else amountPaint
+
+        canvas.drawText("Balance Due:", totalsX, y, boldBodyPaint)
+        val balanceText = CurrencyUtils.formatCurrency(balance, CurrencyUtils.loadCurrencyCode(context))
+        val balanceWidth = balancePaint.measureText(balanceText)
+        canvas.drawText(balanceText, rightEdge - balanceWidth, y, balancePaint)
+        y += LINE_HEIGHT + 15f
 
         // --- Footer ---
         canvas.drawLine(MARGIN, PAGE_HEIGHT - 60f, PAGE_WIDTH - MARGIN, PAGE_HEIGHT - 60f, linePaint)
-        val footerText = "Generated by MyManager • ${dateFormat.format(Date())}"
+        val footerText = "Generated by MyManager"
         val footerWidth = smallPaint.measureText(footerText)
         canvas.drawText(
             footerText,
@@ -317,26 +408,41 @@ class InvoiceGenerator(
 
         document.finishPage(page)
 
-        // Save to Downloads
         val fileName = "MyManager_Invoice_${invoiceNumber}_${System.currentTimeMillis()}.pdf"
 
         return try {
+            // Save to cache for opening/previewing
+            val cacheDir = File(context.cacheDir, "shared_invoices")
+            cacheDir.mkdirs()
+            val cacheFile = File(cacheDir, fileName)
+            FileOutputStream(cacheFile).use { outputStream ->
+                document.writeTo(outputStream)
+            }
+
+            val cacheUri = FileProvider.getUriForFile(
+                context,
+                "${context.packageName}.fileprovider",
+                cacheFile
+            )
+
+            // Save to Downloads (reuse document bytes from cache file)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                // Use MediaStore for API 29+
                 val contentValues = ContentValues().apply {
                     put(MediaStore.MediaColumns.DISPLAY_NAME, fileName)
                     put(MediaStore.MediaColumns.MIME_TYPE, "application/pdf")
                     put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS)
                 }
 
-                val uri = context.contentResolver.insert(
+                val downloadsUri = context.contentResolver.insert(
                     MediaStore.Downloads.EXTERNAL_CONTENT_URI,
                     contentValues
                 )
 
-                uri?.let {
+                downloadsUri?.let {
                     context.contentResolver.openOutputStream(it)?.use { outputStream ->
-                        document.writeTo(outputStream)
+                        cacheFile.inputStream().use { inputStream ->
+                            inputStream.copyTo(outputStream)
+                        }
                     }
                 }
             } else {
@@ -345,24 +451,44 @@ class InvoiceGenerator(
                     Environment.DIRECTORY_DOWNLOADS
                 )
                 val file = File(downloadsDir, fileName)
-                FileOutputStream(file).use { outputStream ->
-                    document.writeTo(outputStream)
-                }
+                cacheFile.copyTo(file, overwrite = true)
             }
 
             document.close()
-            fileName
+            InvoiceResult(fileName, cacheUri)
         } catch (e: Exception) {
             document.close()
             null
         }
     }
 
+    private data class CartItemData(
+        val name: String,
+        val price: Double,
+        val quantity: Int,
+        val subtotal: Double
+    )
+
     private fun parseCustomFields(json: String): Map<String, String> {
         return try {
             Json.decodeFromString<Map<String, String>>(json)
         } catch (e: Exception) {
             emptyMap()
+        }
+    }
+
+    private fun parseCartItems(json: String): List<CartItemData> {
+        return try {
+            val items = Json.decodeFromString<List<Map<String, String>>>(json)
+            items.mapNotNull { item ->
+                val name = item["productName"] ?: return@mapNotNull null
+                val price = item["price"]?.toDoubleOrNull() ?: 0.0
+                val quantity = item["quantity"]?.toIntOrNull() ?: 1
+                val subtotal = item["subtotal"]?.toDoubleOrNull() ?: (price * quantity)
+                CartItemData(name, price, quantity, subtotal)
+            }
+        } catch (e: Exception) {
+            emptyList()
         }
     }
 }

@@ -14,6 +14,7 @@ import com.core2studio.mymanager.data.repository.CategoryRepository
 import com.core2studio.mymanager.data.repository.ProductRepository
 import com.core2studio.mymanager.data.repository.ProductShareGenerator
 import com.core2studio.mymanager.data.storage.CloudinaryStorage
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -49,10 +50,16 @@ class ProductViewModel(
     private val _shareUiState = MutableStateFlow(ShareUiState())
     val shareUiState: StateFlow<ShareUiState> = _shareUiState.asStateFlow()
 
+    private var loadProductsJob: Job? = null
+
     fun loadProducts(categoryId: String) {
-        viewModelScope.launch {
+        loadProductsJob?.cancel()
+        loadProductsJob = viewModelScope.launch {
             val category = categoryRepository.getCategoryById(categoryId)
-            _uiState.value = _uiState.value.copy(categoryName = category?.name ?: "Products")
+            _uiState.value = _uiState.value.copy(
+                categoryName = category?.name ?: "Products",
+                isLoading = true
+            )
 
             productRepository.getProductsByCategory(categoryId).collect { products ->
                 _uiState.value = _uiState.value.copy(products = products, isLoading = false)
@@ -81,12 +88,16 @@ class ProductViewModel(
 
             val urls = mutableListOf<String>()
             val publicIds = mutableListOf<String>()
+            val errors = mutableListOf<String>()
             for (uri in imageUris) {
-                val result = cloudinaryStorage.uploadImage(uri, context, uid)
-                if (result != null) {
-                    urls.add(result.first)
-                    publicIds.add(result.second)
-                }
+                cloudinaryStorage.uploadImage(uri, context, uid)
+                    .onSuccess { (url, publicId) ->
+                        urls.add(url)
+                        publicIds.add(publicId)
+                    }
+                    .onFailure { e ->
+                        errors.add(e.message ?: "Unknown error")
+                    }
             }
 
             firestoreProductRepository.insertProduct(
@@ -114,11 +125,14 @@ class ProductViewModel(
             val newUrls = mutableListOf<String>()
             val newPublicIds = mutableListOf<String>()
             for (uri in imageUris) {
-                val result = cloudinaryStorage.uploadImage(uri, context, uid)
-                if (result != null) {
-                    newUrls.add(result.first)
-                    newPublicIds.add(result.second)
-                }
+                cloudinaryStorage.uploadImage(uri, context, uid)
+                    .onSuccess { (url, publicId) ->
+                        newUrls.add(url)
+                        newPublicIds.add(publicId)
+                    }
+                    .onFailure { e ->
+                        Log.e(TAG, "Image upload failed", e)
+                    }
             }
 
             if (newUrls.isNotEmpty()) {
@@ -197,7 +211,8 @@ class ProductViewModel(
                 businessName = prefs.name,
                 businessEmail = prefs.email,
                 businessPhone = prefs.phone,
-                businessAddress = prefs.address
+                businessAddress = prefs.address,
+                businessWebsite = prefs.website
             )
             _shareUiState.value = _shareUiState.value.copy(shareUri = uri, isSharing = false)
         }
@@ -212,7 +227,8 @@ class ProductViewModel(
                 businessName = prefs.name,
                 businessEmail = prefs.email,
                 businessPhone = prefs.phone,
-                businessAddress = prefs.address
+                businessAddress = prefs.address,
+                businessWebsite = prefs.website
             )
             _shareUiState.value = _shareUiState.value.copy(shareUri = uri, isSharing = false)
         }
@@ -223,7 +239,7 @@ class ProductViewModel(
     }
 
     private suspend fun getBusinessPrefs(context: Context): BusinessPrefs {
-        val uid = authRepository.userId ?: return BusinessPrefs("", "", "", "")
+        val uid = authRepository.userId ?: return BusinessPrefs("", "", "", "", "")
 
         val prefs: SharedPreferences = context.getSharedPreferences(
             "mymanager_settings_$uid",
@@ -234,9 +250,10 @@ class ProductViewModel(
         val email = prefs.getString("business_email", "") ?: ""
         val phone = prefs.getString("business_phone", "") ?: ""
         val address = prefs.getString("business_address", "") ?: ""
+        val website = prefs.getString("business_website", "") ?: ""
 
         if (name.isNotBlank() || email.isNotBlank() || phone.isNotBlank() || address.isNotBlank()) {
-            return BusinessPrefs(name, email, phone, address)
+            return BusinessPrefs(name, email, phone, address, website)
         }
 
         return try {
@@ -245,10 +262,11 @@ class ProductViewModel(
                 name = profile?.businessName ?: "",
                 email = profile?.businessEmail ?: "",
                 phone = profile?.businessPhone ?: "",
-                address = profile?.businessAddress ?: ""
+                address = profile?.businessAddress ?: "",
+                website = profile?.website ?: ""
             )
         } catch (e: Exception) {
-            BusinessPrefs("", "", "", "")
+            BusinessPrefs("", "", "", "", "")
         }
     }
 
@@ -256,7 +274,8 @@ class ProductViewModel(
         val name: String,
         val email: String,
         val phone: String,
-        val address: String
+        val address: String,
+        val website: String
     )
 
     companion object {

@@ -4,6 +4,7 @@ import android.app.Application
 import android.content.Context
 import android.util.Log
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import com.core2studio.mymanager.data.auth.AuthRepository
 import com.core2studio.mymanager.data.auth.UserProfileRepository
 import com.core2studio.mymanager.data.firestore.FirestoreCategoryRepository
@@ -14,6 +15,7 @@ import com.core2studio.mymanager.data.firestore.FirestoreProductRepository
 import com.core2studio.mymanager.data.firestore.SyncManager
 import com.core2studio.mymanager.data.storage.CloudinaryStorage
 import com.core2studio.mymanager.data.local.MyManagerDatabase
+import com.core2studio.mymanager.BuildConfig
 import com.core2studio.mymanager.data.repository.CategoryRepository
 import com.core2studio.mymanager.data.repository.ClientRepository
 import com.core2studio.mymanager.data.repository.InvoiceGenerator
@@ -109,21 +111,27 @@ class MyManagerApplication : Application() {
 
     val cloudinaryStorage: com.core2studio.mymanager.data.storage.CloudinaryStorage by lazy {
         com.core2studio.mymanager.data.storage.CloudinaryStorage(
-            cloudName = "dry3uxhvm",
-            uploadPreset = "business_manager_products"
+            cloudName = BuildConfig.CLOUDINARY_CLOUD_NAME,
+            uploadPreset = BuildConfig.CLOUDINARY_UPLOAD_PRESET
         )
     }
 
     val themeMode = mutableIntStateOf(0)
+    val currencyCode = mutableStateOf(com.core2studio.mymanager.data.utils.CurrencyUtils.DEFAULT_CURRENCY)
 
     fun loadThemeMode() {
         val prefs = getSharedPreferences("mymanager_theme", Context.MODE_PRIVATE)
         themeMode.intValue = prefs.getInt("theme_mode", 0)
     }
 
+    fun loadCurrencyCode() {
+        currencyCode.value = com.core2studio.mymanager.data.utils.CurrencyUtils.loadCurrencyCode(this)
+    }
+
     override fun onCreate() {
         super.onCreate()
         loadThemeMode()
+        loadCurrencyCode()
         try {
             FirebaseApp.initializeApp(this)
             Log.i("MyManager", "Firebase initialized successfully")

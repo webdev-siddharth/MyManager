@@ -27,6 +27,12 @@ interface ProductDao {
     @Query("SELECT * FROM products ORDER BY name ASC")
     fun getAllProducts(): Flow<List<Product>>
 
+    @Query("SELECT * FROM products ORDER BY name ASC")
+    suspend fun getAllOnce(): List<Product>
+
+    @Query("SELECT * FROM products ORDER BY createdAt DESC LIMIT 4")
+    fun getRecentProducts(): Flow<List<Product>>
+
     @Query("SELECT * FROM products WHERE categoryId = :categoryId ORDER BY name ASC")
     fun getProductsByCategory(categoryId: String): Flow<List<Product>>
 

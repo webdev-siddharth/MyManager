@@ -38,6 +38,9 @@ interface OrderDao {
     @Query("SELECT * FROM orders ORDER BY date DESC")
     fun getAllOrders(): Flow<List<Order>>
 
+    @Query("SELECT * FROM orders ORDER BY date DESC")
+    suspend fun getAllOrdersOnce(): List<Order>
+
     @Query("SELECT * FROM orders WHERE clientId = :clientId ORDER BY date DESC")
     fun getOrdersByClient(clientId: String): Flow<List<Order>>
 
@@ -68,13 +71,13 @@ interface OrderDao {
 
     @Query(
         """
-        SELECT c.name AS categoryName, 
+        SELECT COALESCE(c.name, 'Uncategorized') AS categoryName, 
                COALESCE(SUM(t.paidAmount), 0.0) AS totalRevenue, 
                COUNT(t.id) AS orderCount
         FROM orders t
-        INNER JOIN products p ON t.productId = p.id
-        INNER JOIN categories c ON p.categoryId = c.id
-        GROUP BY c.id
+        LEFT JOIN products p ON t.productId = p.id
+        LEFT JOIN categories c ON p.categoryId = c.id
+        GROUP BY COALESCE(c.name, 'Uncategorized')
         ORDER BY totalRevenue DESC
         """
     )

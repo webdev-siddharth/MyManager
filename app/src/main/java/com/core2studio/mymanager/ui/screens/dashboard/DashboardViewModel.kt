@@ -20,6 +20,7 @@ data class DashboardUiState(
     val orderCount: Int = 0,
     val completedCount: Int = 0,
     val recentProducts: List<Product> = emptyList(),
+    val totalProductCount: Int = 0,
     val clients: Map<String, Client> = emptyMap(),
     val isRefreshing: Boolean = false,
     val errorMessage: String? = null
@@ -63,8 +64,13 @@ class DashboardViewModel(
                 }
             }
             launch {
-                productRepository.getAllProducts().collect { products ->
+                productRepository.getRecentProducts().collect { products ->
                     _uiState.value = _uiState.value.copy(recentProducts = products)
+                }
+            }
+            launch {
+                productRepository.getAllProducts().collect { allProducts ->
+                    _uiState.value = _uiState.value.copy(totalProductCount = allProducts.size)
                 }
             }
             launch {

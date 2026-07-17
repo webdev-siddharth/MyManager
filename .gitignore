@@ -1,12 +1,7 @@
 *.iml
 .gradle
 /local.properties
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
+.idea/
 .DS_Store
 /build
 /captures
@@ -14,3 +9,11 @@
 .cxx
 local.properties
 google-services.json
+*.jks
+*.keystore
+*.env
+.env.*
+node_modules/
+functions/node_modules/
+functions/package-lock.json
+*.log

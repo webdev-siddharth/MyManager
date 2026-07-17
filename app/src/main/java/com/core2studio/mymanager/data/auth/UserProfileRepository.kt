@@ -15,6 +15,7 @@ data class UserProfile(
     val businessAddress: String = "",
     val businessLogoUrl: String = "",
     val gstin: String = "",
+    val website: String = "",
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis()
 )
@@ -67,7 +68,8 @@ class UserProfileRepository {
         businessPhone: String,
         businessAddress: String,
         businessLogoUrl: String = "",
-        gstin: String = ""
+        gstin: String = "",
+        website: String = ""
     ): Result<Unit> = runCatching {
         val updates = mapOf(
             "businessName" to businessName,
@@ -76,6 +78,7 @@ class UserProfileRepository {
             "businessAddress" to businessAddress,
             "businessLogoUrl" to businessLogoUrl,
             "gstin" to gstin,
+            "website" to website,
             "updatedAt" to System.currentTimeMillis()
         )
         userDoc(uid).set(updates, SetOptions.merge()).await()

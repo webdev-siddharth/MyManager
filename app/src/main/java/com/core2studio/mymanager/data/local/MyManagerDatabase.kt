@@ -19,7 +19,7 @@ import com.core2studio.mymanager.data.local.entity.CartItem
 
 @Database(
     entities = [Category::class, Product::class, Client::class, Order::class, CartItem::class],
-    version = 7,
+    version = 9,
     exportSchema = false
 )
 @TypeConverters(Converters::class)

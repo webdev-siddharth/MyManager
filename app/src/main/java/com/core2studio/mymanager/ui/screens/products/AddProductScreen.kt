@@ -45,6 +45,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
+import com.core2studio.mymanager.data.utils.CurrencyUtils
 import com.core2studio.mymanager.ui.components.MyManagerTopBar
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -54,6 +55,7 @@ fun AddProductScreen(
     onBack: () -> Unit,
     onSave: (name: String, description: String, price: Double, imageUris: List<String>) -> Unit = { _, _, _, _ -> }
 ) {
+    val context = androidx.compose.ui.platform.LocalContext.current
     var name by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
     var price by remember { mutableStateOf("") }
@@ -239,7 +241,7 @@ fun AddProductScreen(
                     price = it
                     priceError = false
                 },
-                label = { Text("Price (₹)") },
+                label = { Text("Price (${CurrencyUtils.getCurrencySymbol(CurrencyUtils.loadCurrencyCode(context))})") },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
                 isError = priceError,
@@ -247,7 +249,7 @@ fun AddProductScreen(
                     { Text("Valid price is required") }
                 } else null,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                prefix = { Text("₹") },
+                prefix = { Text(CurrencyUtils.getCurrencySymbol(CurrencyUtils.loadCurrencyCode(context))) },
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = MaterialTheme.colorScheme.primary,
                     unfocusedBorderColor = MaterialTheme.colorScheme.outline,
@@ -275,7 +277,6 @@ fun AddProductScreen(
                             priceValue!!,
                             selectedImageUris.map { it.toString() }
                         )
-                        onBack()
                     }
                 },
                 modifier = Modifier

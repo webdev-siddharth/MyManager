@@ -41,13 +41,10 @@ class CategoryViewModel(
                 _uiState.value = _uiState.value.copy(categories = categories)
                 val counts = mutableMapOf<String, Int>()
                 categories.forEach { category ->
-                    launch {
-                        productRepository.getProductsByCategory(category.id).collect { products ->
-                            counts[category.id] = products.size
-                            _uiState.value = _uiState.value.copy(productCounts = counts.toMap())
-                        }
-                    }
+                    val products = productRepository.getProductsByCategoryOnce(category.id)
+                    counts[category.id] = products.size
                 }
+                _uiState.value = _uiState.value.copy(productCounts = counts)
             }
         }
     }

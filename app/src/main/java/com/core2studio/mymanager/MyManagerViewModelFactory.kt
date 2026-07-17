@@ -60,7 +60,8 @@ class MyManagerViewModelFactory(
                     productRepository = app.productRepository,
                     firestoreOrderRepository = app.firestoreOrderRepository,
                     firestoreClientRepository = app.firestoreClientRepository,
-                    authRepository = app.authRepository
+                    authRepository = app.authRepository,
+                    invoiceGenerator = app.invoiceGenerator
                 ) as T
             }
             modelClass.isAssignableFrom(com.core2studio.mymanager.ui.screens.clients.ClientViewModel::class.java) -> {

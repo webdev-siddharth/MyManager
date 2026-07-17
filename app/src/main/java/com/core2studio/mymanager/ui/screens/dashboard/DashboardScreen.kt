@@ -52,26 +52,28 @@ import com.core2studio.mymanager.ui.components.EmptyState
 import com.core2studio.mymanager.ui.components.MyManagerCard
 import com.core2studio.mymanager.ui.components.MyManagerTopBar
 import com.core2studio.mymanager.ui.components.StatsCard
+import com.core2studio.mymanager.data.utils.CurrencyUtils
 import kotlinx.coroutines.launch
-import java.text.NumberFormat
-import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DashboardScreen(
     onNavigateToOrders: () -> Unit,
     onNavigateToCategories: () -> Unit,
+    onNavigateToCatalog: () -> Unit = {},
     totalRevenue: Double = 0.0,
     pendingBalance: Double = 0.0,
     orderCount: Int = 0,
     completedCount: Int = 0,
     products: List<Product> = emptyList(),
+    totalProductCount: Int = 0,
     isRefreshing: Boolean = false,
     onRefresh: () -> Unit = {},
     errorMessage: String? = null,
     onDismissError: () -> Unit = {}
 ) {
-    val currencyFormatter = NumberFormat.getCurrencyInstance(Locale("en", "IN"))
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val currencyCode = remember(context) { CurrencyUtils.loadCurrencyCode(context) }
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
@@ -123,13 +125,13 @@ fun DashboardScreen(
                     ) {
                         StatsCard(
                             label = "Total Revenue",
-                            value = currencyFormatter.format(totalRevenue),
+                            value = CurrencyUtils.formatCurrency(totalRevenue, currencyCode),
                             icon = Icons.Filled.AttachMoney,
                             modifier = Modifier.weight(1f)
                         )
                         StatsCard(
                             label = "Pending Balance",
-                            value = currencyFormatter.format(pendingBalance),
+                            value = CurrencyUtils.formatCurrency(pendingBalance, currencyCode),
                             icon = Icons.Filled.Pending,
                             modifier = Modifier.weight(1f)
                         )
@@ -230,7 +232,7 @@ fun DashboardScreen(
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
-                            text = "${products.size} items",
+                            text = "${totalProductCount} items",
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -299,7 +301,7 @@ fun DashboardScreen(
                                         )
                                         Spacer(modifier = Modifier.height(2.dp))
                                         Text(
-                                            text = currencyFormatter.format(product.price),
+                                            text = CurrencyUtils.formatCurrency(product.price, currencyCode),
                                             style = MaterialTheme.typography.labelLarge,
                                             color = MaterialTheme.colorScheme.primary,
                                             maxLines = 1
@@ -311,6 +313,25 @@ fun DashboardScreen(
                             if (rowProducts.size == 1) {
                                 Spacer(modifier = Modifier.weight(1f))
                             }
+                        }
+                    }
+                }
+
+                if (products.isNotEmpty() && totalProductCount > 4) {
+                    item {
+                        Button(
+                            onClick = onNavigateToCatalog,
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primary,
+                                contentColor = MaterialTheme.colorScheme.onPrimary
+                            ),
+                            elevation = ButtonDefaults.buttonElevation(
+                                defaultElevation = 0.dp,
+                                pressedElevation = 0.dp
+                            )
+                        ) {
+                            Text(text = "See More")
                         }
                     }
                 }
