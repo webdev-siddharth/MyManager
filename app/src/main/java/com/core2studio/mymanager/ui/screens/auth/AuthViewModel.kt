@@ -262,7 +262,7 @@ class AuthViewModel(
                     e.message?.contains("network", ignoreCase = true) == true ->
                         "Network error. Please check your connection and try again."
                     e.message?.contains("canceled", ignoreCase = true) == true ->
-                        return@launch
+                        "Google sign-in was cancelled. Please try again."
                     e.message?.contains("email-already-in-use", ignoreCase = true) == true ->
                         "An account with this email already exists. Please try signing in instead."
                     e.message?.contains("account-exists-with-different-credential", ignoreCase = true) == true ->
@@ -284,6 +284,15 @@ class AuthViewModel(
 
     fun onGoogleSignInHandled() {
         _uiState.value = _uiState.value.copy(isGoogleSignInTriggered = false, googleSignInFromSignup = false)
+    }
+
+    fun setGoogleSignInError(message: String) {
+        _uiState.value = _uiState.value.copy(
+            isLoading = false,
+            error = message,
+            isGoogleSignInTriggered = false,
+            googleSignInFromSignup = false
+        )
     }
 
     fun signOut() {

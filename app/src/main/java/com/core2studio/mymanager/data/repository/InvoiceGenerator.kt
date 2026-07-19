@@ -125,7 +125,8 @@ class InvoiceGenerator(
         businessEmail: String = "",
         businessPhone: String = "",
         businessAddress: String = "",
-        businessWebsite: String = ""
+        businessWebsite: String = "",
+        businessGstin: String = ""
     ): InvoiceResult? {
         val document = PdfDocument()
         val pageInfo = PdfDocument.PageInfo.Builder(PAGE_WIDTH, PAGE_HEIGHT, 1).create()
@@ -158,7 +159,11 @@ class InvoiceGenerator(
             canvas.drawText("Website: $businessWebsite", MARGIN, y, bodyPaint)
             y += LINE_HEIGHT
         }
-        if (businessPhone.isNotBlank() || businessEmail.isNotBlank() || businessAddress.isNotBlank() || businessWebsite.isNotBlank()) {
+        if (businessGstin.isNotBlank()) {
+            canvas.drawText("GSTIN: $businessGstin", MARGIN, y, bodyPaint)
+            y += LINE_HEIGHT
+        }
+        if (businessPhone.isNotBlank() || businessEmail.isNotBlank() || businessAddress.isNotBlank() || businessWebsite.isNotBlank() || businessGstin.isNotBlank()) {
             y += 10f
         }
 

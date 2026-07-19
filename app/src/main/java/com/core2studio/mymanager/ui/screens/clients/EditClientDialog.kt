@@ -96,7 +96,7 @@ fun EditClientDialog(
                     label = { Text("Email") },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
                     colors = textFieldColors
                 )
                 OutlinedTextField(

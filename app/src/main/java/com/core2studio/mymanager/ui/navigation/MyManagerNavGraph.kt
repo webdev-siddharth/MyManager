@@ -114,12 +114,27 @@ fun MyManagerNavGraph(
                     authViewModel.signInWithGoogle(idToken)
                 } else {
                     Log.e("MyManager", "Google Sign-In: idToken is null")
+                    authViewModel.setGoogleSignInError("Google sign-in failed: could not get authentication token. Please try again.")
                 }
+            } catch (e: ApiException) {
+                Log.e("MyManager", "Google Sign-In failed with ApiException: ${e.statusCode}", e)
+                val message = when (e.statusCode) {
+                    12500 -> "Google sign-in was cancelled. Please try again."
+                    12501 -> "Google sign-in was cancelled by the user."
+                    12502 -> "Sign-in timed out. Please try again."
+                    12503 -> "Network error. Please check your connection and try again."
+                    else -> "Google sign-in failed (error ${e.statusCode}). Please try again."
+                }
+                authViewModel.setGoogleSignInError(message)
             } catch (e: Exception) {
                 Log.e("MyManager", "Google Sign-In failed", e)
+                authViewModel.setGoogleSignInError("Google sign-in failed. Please try again.")
             }
         } else {
             Log.e("MyManager", "Google Sign-In cancelled or failed: resultCode=${result.resultCode}")
+            if (result.resultCode != Activity.RESULT_CANCELED) {
+                authViewModel.setGoogleSignInError("Google sign-in failed. Please try again.")
+            }
         }
         authViewModel.onGoogleSignInHandled()
     }
@@ -222,13 +237,16 @@ private fun MainContent(
         settingsViewModel.loadSettings()
     }
 
-    LaunchedEffect(Unit) {
+    val settingsUiState by settingsViewModel.uiState.collectAsState()
+
+    LaunchedEffect(settingsUiState.businessName, settingsUiState.businessEmail, settingsUiState.businessPhone, settingsUiState.businessAddress, settingsUiState.website, settingsUiState.gstin) {
         orderViewModel.setBusinessInfo(
-            name = settingsViewModel.getBusinessName(),
-            email = settingsViewModel.getBusinessEmail(),
-            phone = settingsViewModel.getBusinessPhone(),
-            address = settingsViewModel.getBusinessAddress(),
-            website = settingsViewModel.getWebsite()
+            name = settingsUiState.businessName,
+            email = settingsUiState.businessEmail,
+            phone = settingsUiState.businessPhone,
+            address = settingsUiState.businessAddress,
+            website = settingsUiState.website,
+            gstin = settingsUiState.gstin
         )
     }
 
@@ -541,12 +559,15 @@ private fun MainContent(
                 val uiState by clientViewModel.uiState.collectAsState()
                 androidx.compose.runtime.LaunchedEffect(clientId) {
                     clientViewModel.loadClientDetail(clientId)
+                }
+                LaunchedEffect(settingsUiState.businessName, settingsUiState.businessEmail, settingsUiState.businessPhone, settingsUiState.businessAddress, settingsUiState.website, settingsUiState.gstin) {
                     clientViewModel.setBusinessInfo(
-                        name = settingsViewModel.getBusinessName(),
-                        email = settingsViewModel.getBusinessEmail(),
-                        phone = settingsViewModel.getBusinessPhone(),
-                        address = settingsViewModel.getBusinessAddress(),
-                        website = settingsViewModel.getWebsite()
+                        name = settingsUiState.businessName,
+                        email = settingsUiState.businessEmail,
+                        phone = settingsUiState.businessPhone,
+                        address = settingsUiState.businessAddress,
+                        website = settingsUiState.website,
+                        gstin = settingsUiState.gstin
                     )
                 }
                 com.core2studio.mymanager.ui.screens.clients.ClientDetailScreen(

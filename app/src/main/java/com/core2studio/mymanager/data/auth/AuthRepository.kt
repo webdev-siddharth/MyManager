@@ -57,11 +57,10 @@ class AuthRepository {
         Unit
     }
 
-    suspend fun signInWithGoogle(idToken: String): Result<Boolean> {
+    suspend fun signInWithGoogle(idToken: String): Result<Boolean> = runCatching {
         val credential = GoogleAuthProvider.getCredential(idToken, null)
         val result = auth.signInWithCredential(credential).await()
-        val isNewUser = result.additionalUserInfo?.isNewUser == true
-        return Result.success(isNewUser)
+        result.additionalUserInfo?.isNewUser == true
     }
 
     suspend fun linkGoogleCredential(idToken: String): Result<Unit> = runCatching {

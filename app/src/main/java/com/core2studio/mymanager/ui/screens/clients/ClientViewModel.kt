@@ -58,6 +58,7 @@ class ClientViewModel(
     private var businessPhone: String = ""
     private var businessAddress: String = ""
     private var businessWebsite: String = ""
+    private var businessGstin: String = ""
 
     private var loadDetailJob: Job? = null
 
@@ -172,12 +173,13 @@ class ClientViewModel(
         _uiState.value = _uiState.value.copy(errorMessage = null)
     }
 
-    fun setBusinessInfo(name: String, email: String, phone: String, address: String, website: String = "") {
+    fun setBusinessInfo(name: String, email: String, phone: String, address: String, website: String = "", gstin: String = "") {
         businessName = name
         businessEmail = email
         businessPhone = phone
         businessAddress = address
         businessWebsite = website
+        businessGstin = gstin
     }
 
     fun generateInvoice(order: Order) {
@@ -194,7 +196,8 @@ class ClientViewModel(
                     businessEmail = businessEmail,
                     businessPhone = businessPhone,
                     businessAddress = businessAddress,
-                    businessWebsite = businessWebsite
+                    businessWebsite = businessWebsite,
+                    businessGstin = businessGstin
                 )
             }
 

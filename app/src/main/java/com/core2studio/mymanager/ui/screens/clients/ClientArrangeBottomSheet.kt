@@ -25,7 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
 enum class ClientArrangeOption(val label: String) {
-    NONE("Default"),
+    RECENT("Recently Added"),
     A_Z("A to Z"),
     Z_A("Z to A")
 }
@@ -89,7 +89,7 @@ fun ClientArrangeBottomSheet(
             ) {
                 OutlinedButton(
                     onClick = {
-                        tempOption = ClientArrangeOption.NONE
+                        tempOption = ClientArrangeOption.RECENT
                         onReset()
                     },
                     modifier = Modifier.weight(1f),

@@ -48,13 +48,13 @@ fun ClientsScreen(
     onDismissAddDialog: () -> Unit = {},
     onAddClient: (name: String, phone: String, email: String, address: String) -> Unit = { _, _, _, _ -> }
 ) {
-    var arrangeOption by remember { mutableStateOf(ClientArrangeOption.NONE) }
+    var arrangeOption by remember { mutableStateOf(ClientArrangeOption.RECENT) }
     var showArrangeSheet by remember { mutableStateOf(false) }
     var showSearch by remember { mutableStateOf(false) }
 
     val arrangedClients = remember(filteredClients, arrangeOption) {
         when (arrangeOption) {
-            ClientArrangeOption.NONE -> filteredClients
+            ClientArrangeOption.RECENT -> filteredClients.sortedByDescending { it.createdAt }
             ClientArrangeOption.A_Z -> filteredClients.sortedBy { it.name.lowercase() }
             ClientArrangeOption.Z_A -> filteredClients.sortedByDescending { it.name.lowercase() }
         }
@@ -193,7 +193,7 @@ fun ClientsScreen(
                 currentOption = arrangeOption,
                 onDismiss = { showArrangeSheet = false },
                 onApply = { arrangeOption = it },
-                onReset = { arrangeOption = ClientArrangeOption.NONE }
+                onReset = { arrangeOption = ClientArrangeOption.RECENT }
             )
         }
     }
