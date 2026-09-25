@@ -51,7 +51,9 @@ fun CategoriesScreen(
     cartCount: Int = 0,
     onAddCategory: (name: String, description: String) -> Unit = { _, _ -> },
     onUpdateCategory: (Category) -> Unit = {},
-    onDeleteCategory: (Category) -> Unit = {}
+    onDeleteCategory: (Category) -> Unit = {},
+    errorMessage: String? = null,
+    onDismissError: () -> Unit = {}
 ) {
     var showAddDialog by remember { mutableStateOf(false) }
     var editingCategory by remember { mutableStateOf<Category?>(null) }
@@ -88,6 +90,12 @@ fun CategoriesScreen(
                 onClick = { showAddDialog = true },
                 icon = Icons.Filled.Add,
                 text = "Add Category"
+            )
+        },
+        snackbarHost = {
+            com.core2studio.mymanager.ui.components.ErrorSnackbarHost(
+                errorMessage = errorMessage,
+                onDismissError = onDismissError
             )
         },
         containerColor = MaterialTheme.colorScheme.background
@@ -137,7 +145,7 @@ fun CategoriesScreen(
                             Text(
                                 text = "${productCountResolver(category.id)} products",
                                 style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.outline
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
 

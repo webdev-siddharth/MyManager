@@ -79,4 +79,50 @@ class CloudinaryStorage(
             }
         }
     }
+
+    suspend fun deleteImages(publicIds: List<String>): Result<Unit> = withContext(Dispatchers.IO) {
+        val errors = mutableListOf<String>()
+        for (publicId in publicIds) {
+            deleteImage(publicId).onFailure { e ->
+                errors.add("$publicId: ${e.message}")
+            }
+        }
+        if (errors.isEmpty()) {
+            Result.success(Unit)
+        } else {
+            Result.failure(RuntimeException("Failed to delete some images: ${errors.joinToString(", ")}"))
+        }
+    }
+
+    suspend fun deleteImage(publicId: String): Result<Unit> = withContext(Dispatchers.IO) {
+        return@withContext try {
+            val request = Request.Builder()
+                .url("https://api.cloudinary.com/v1_1/$cloudName/image/destroy")
+                .post(
+                    okhttp3.FormBody.Builder()
+                        .add("public_id", publicId)
+                        .build()
+                )
+                .build()
+
+            val response = client.newCall(request).execute()
+            response.use { resp ->
+                val body = resp.body?.string()
+                if (resp.isSuccessful && body != null) {
+                    val json = JSONObject(body)
+                    val result = json.getString("result")
+                    if (result == "ok" || result == "not found") {
+                        Result.success(Unit)
+                    } else {
+                        Result.failure(RuntimeException("Cloudinary delete failed: $result"))
+                    }
+                } else {
+                    Result.failure(RuntimeException("Cloudinary delete failed: ${resp.code} $body"))
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("CloudinaryStorage", "Delete error for $publicId", e)
+            Result.failure(e)
+        }
+    }
 }

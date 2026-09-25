@@ -9,10 +9,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-
-private val StatusRed = Color(0xFFD32F2F)
-private val StatusOrange = Color(0xFFF57C00)
-private val StatusGreen = Color(0xFF388E3C)
+import com.core2studio.mymanager.theme.StatusCompleted
+import com.core2studio.mymanager.theme.StatusPartial
+import com.core2studio.mymanager.theme.StatusPending
 
 @Composable
 fun StatusChip(
@@ -20,9 +19,9 @@ fun StatusChip(
     modifier: Modifier = Modifier
 ) {
     val backgroundColor = when (status.uppercase()) {
-        "COMPLETED" -> StatusGreen
-        "PARTIAL" -> StatusOrange
-        else -> StatusRed
+        "COMPLETED" -> StatusCompleted
+        "PARTIAL" -> StatusPartial
+        else -> StatusPending
     }
 
     Surface(

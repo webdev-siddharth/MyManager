@@ -284,7 +284,7 @@ fun DashboardScreen(
                                                     Icon(
                                                         imageVector = Icons.Filled.Inventory2,
                                                         contentDescription = product.name,
-                                                        tint = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
+                                                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
                                                         modifier = Modifier.size(40.dp)
                                                     )
                                                 }

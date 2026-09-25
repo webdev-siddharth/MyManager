@@ -86,7 +86,7 @@ fun OrderDetailScreen(
     var selectedStatus by remember(order?.status) { mutableStateOf(order?.status ?: "PENDING") }
     var showStatusDialog by remember { mutableStateOf(false) }
     var paymentAmount by remember { mutableStateOf("") }
-    var paymentDate by remember { mutableStateOf(System.currentTimeMillis()) }
+    var paymentDate by remember { androidx.compose.runtime.mutableLongStateOf(System.currentTimeMillis()) }
     var showDatePicker by remember { mutableStateOf(false) }
     val currencyCode = CurrencyUtils.loadCurrencyCode(context)
 
@@ -528,8 +528,12 @@ fun OrderDetailScreen(
                 if (order.customFields.isNotBlank() && order.customFields != "{}") {
                     val customFields = try {
                         val json = org.json.JSONObject(order.customFields)
+                        val discountValue = json.opt("discountValue")?.toString()?.toDoubleOrNull() ?: 0.0
+                        val internalKeys = setOf("cartItems", "gstRate", "gstType", "gstPricingMode")
+                        val discountKeys = setOf("discountType", "discountValue")
                         json.keys().asSequence()
-                            .filter { it != "cartItems" }
+                            .filter { it !in internalKeys }
+                            .filter { it !in discountKeys || discountValue > 0.0 }
                             .map { key -> key to json.getString(key) }
                             .filter { it.second.isNotBlank() }
                             .toMap()
@@ -645,9 +649,9 @@ fun OrderDetailScreen(
                     ) {
                         listOf("PENDING", "PARTIAL", "COMPLETED").forEach { status ->
                             val chipColor = when (status) {
-                                "PENDING" -> Color(0xFFD32F2F)
-                                "PARTIAL" -> Color(0xFFF57C00)
-                                "COMPLETED" -> Color(0xFF388E3C)
+                                "PENDING" -> com.core2studio.mymanager.theme.StatusPending
+                                "PARTIAL" -> com.core2studio.mymanager.theme.StatusPartial
+                                "COMPLETED" -> com.core2studio.mymanager.theme.StatusCompleted
                                 else -> MaterialTheme.colorScheme.primary
                             }
                             FilterChip(

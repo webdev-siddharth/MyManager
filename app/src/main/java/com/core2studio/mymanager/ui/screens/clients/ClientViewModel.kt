@@ -59,6 +59,10 @@ class ClientViewModel(
     private var businessAddress: String = ""
     private var businessWebsite: String = ""
     private var businessGstin: String = ""
+    private var gstEnabled: Boolean = false
+    private var gstPricingMode: String = "INCLUSIVE"
+    private var gstRate: Int = 18
+    private var gstType: String = "CGST_SGST"
 
     private var loadDetailJob: Job? = null
 
@@ -173,13 +177,17 @@ class ClientViewModel(
         _uiState.value = _uiState.value.copy(errorMessage = null)
     }
 
-    fun setBusinessInfo(name: String, email: String, phone: String, address: String, website: String = "", gstin: String = "") {
+    fun setBusinessInfo(name: String, email: String, phone: String, address: String, website: String = "", gstin: String = "", gstEnabled: Boolean = false, gstPricingMode: String = "INCLUSIVE", gstRate: Int = 18, gstType: String = "CGST_SGST") {
         businessName = name
         businessEmail = email
         businessPhone = phone
         businessAddress = address
         businessWebsite = website
         businessGstin = gstin
+        this.gstEnabled = gstEnabled
+        this.gstPricingMode = gstPricingMode
+        this.gstRate = gstRate
+        this.gstType = gstType
     }
 
     fun generateInvoice(order: Order) {
@@ -197,7 +205,11 @@ class ClientViewModel(
                     businessPhone = businessPhone,
                     businessAddress = businessAddress,
                     businessWebsite = businessWebsite,
-                    businessGstin = businessGstin
+                    businessGstin = businessGstin,
+                    gstEnabled = gstEnabled,
+                    gstPricingMode = gstPricingMode,
+                    gstRate = gstRate,
+                    gstType = gstType
                 )
             }
 

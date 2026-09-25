@@ -16,6 +16,10 @@ data class UserProfile(
     val businessLogoUrl: String = "",
     val gstin: String = "",
     val website: String = "",
+    val gstEnabled: Boolean = false,
+    val gstPricingMode: String = "INCLUSIVE",
+    val gstRate: Int = 18,
+    val gstType: String = "CGST_SGST",
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis()
 )
@@ -69,7 +73,11 @@ class UserProfileRepository {
         businessAddress: String,
         businessLogoUrl: String = "",
         gstin: String = "",
-        website: String = ""
+        website: String = "",
+        gstEnabled: Boolean = false,
+        gstPricingMode: String = "INCLUSIVE",
+        gstRate: Int = 18,
+        gstType: String = "CGST_SGST"
     ): Result<Unit> = runCatching {
         val updates = mapOf(
             "businessName" to businessName,
@@ -79,6 +87,10 @@ class UserProfileRepository {
             "businessLogoUrl" to businessLogoUrl,
             "gstin" to gstin,
             "website" to website,
+            "gstEnabled" to gstEnabled,
+            "gstPricingMode" to gstPricingMode,
+            "gstRate" to gstRate,
+            "gstType" to gstType,
             "updatedAt" to System.currentTimeMillis()
         )
         userDoc(uid).set(updates, SetOptions.merge()).await()

@@ -51,9 +51,23 @@ firebase deploy
 
 ## Build
 
+Debug build:
+
 ```bash
 ./gradlew assembleDebug
 ```
+
+Release build (signed with `app/mymanager-release.jks`):
+
+```bash
+# Windows PowerShell
+$env:KEYSTORE_PASSWORD = "<keystore password>"
+./gradlew assembleRelease
+```
+
+The build fails fast with a clear error if `KEYSTORE_PASSWORD` is not set, or if
+`CLOUDINARY_CLOUD_NAME` / `CLOUDINARY_UPLOAD_PRESET` are missing from
+`local.properties` when building a release.
 
 ## License
 

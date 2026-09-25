@@ -19,6 +19,11 @@ if (localPropsFile.exists()) {
   localProps.load(localPropsFile.inputStream())
 }
 
+val keystorePassword = System.getenv("KEYSTORE_PASSWORD") ?: ""
+
+val cloudinaryCloudName = localProps.getProperty("CLOUDINARY_CLOUD_NAME", "")
+val cloudinaryUploadPreset = localProps.getProperty("CLOUDINARY_UPLOAD_PRESET", "")
+
 android {
     namespace = "com.core2studio.mymanager"
     compileSdk = 36
@@ -26,25 +31,26 @@ android {
         applicationId = "com.core2studio.mymanager"
         minSdk = 26
         targetSdk = 36
-        versionCode = 2
-        versionName = "1.1"
+        versionCode = 3
+        versionName = "2.0"
 
-        buildConfigField("String", "CLOUDINARY_CLOUD_NAME", "\"${localProps.getProperty("CLOUDINARY_CLOUD_NAME", "")}\"")
-        buildConfigField("String", "CLOUDINARY_UPLOAD_PRESET", "\"${localProps.getProperty("CLOUDINARY_UPLOAD_PRESET", "")}\"")
+        buildConfigField("String", "CLOUDINARY_CLOUD_NAME", "\"$cloudinaryCloudName\"")
+        buildConfigField("String", "CLOUDINARY_UPLOAD_PRESET", "\"$cloudinaryUploadPreset\"")
     }
 
     signingConfigs {
         create("release") {
             storeFile = file("mymanager-release.jks")
-            storePassword = System.getenv("KEYSTORE_PASSWORD") ?: ""
+            storePassword = keystorePassword
             keyAlias = "mymanager"
-            keyPassword = System.getenv("KEYSTORE_PASSWORD") ?: ""
+            keyPassword = keystorePassword
         }
     }
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
             signingConfig = signingConfigs.getByName("release")
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
@@ -85,6 +91,36 @@ configurations.all {
 
 kotlin {
     jvmToolchain(17)
+}
+
+// Room schema export (exportSchema = true) — required to write/verify future migrations.
+ksp {
+    arg("room.schemaLocation", "$projectDir/schemas")
+}
+
+// Fail fast with an actionable message instead of failing deep inside
+// signReleaseBundle with a misleading "keystore password was incorrect" error.
+tasks.configureEach {
+    if (name.startsWith("sign") && name.contains("Release")) {
+        doFirst {
+            require(keystorePassword.isNotEmpty()) {
+                "KEYSTORE_PASSWORD environment variable must be set to build a signed release. " +
+                    "Example: KEYSTORE_PASSWORD=*** gradlew assembleRelease"
+            }
+        }
+    }
+}
+
+// An empty Cloudinary config builds green but every upload/delete fails at runtime.
+androidComponents {
+    onVariants(selector().withBuildType("release")) {
+        check(cloudinaryCloudName.isNotBlank() && cloudinaryUploadPreset.isNotBlank()) {
+            "CLOUDINARY_CLOUD_NAME and CLOUDINARY_UPLOAD_PRESET must be set in local.properties to build a release."
+        }
+        check(rootProject.file("app/google-services.json").exists()) {
+            "app/google-services.json is missing; the Google Services plugin was not applied."
+        }
+    }
 }
 
 dependencies {

@@ -134,7 +134,7 @@ fun ClientDetailScreen(
                                 Icon(
                                     imageVector = Icons.Filled.Phone,
                                     contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.outline
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                                 Text(
                                     text = client.phone,
@@ -153,7 +153,7 @@ fun ClientDetailScreen(
                                 Icon(
                                     imageVector = Icons.Filled.Email,
                                     contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.outline
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                                 Text(
                                     text = client.email,
@@ -172,7 +172,7 @@ fun ClientDetailScreen(
                                 Icon(
                                     imageVector = Icons.Filled.LocationOn,
                                     contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.outline
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                                 Text(
                                     text = client.address,

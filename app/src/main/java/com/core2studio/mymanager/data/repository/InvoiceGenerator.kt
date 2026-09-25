@@ -13,7 +13,9 @@ import android.provider.MediaStore
 import androidx.core.content.FileProvider
 import com.core2studio.mymanager.data.local.entity.Client
 import com.core2studio.mymanager.data.local.entity.Order
+import com.core2studio.mymanager.data.local.entity.OrderItemDraft
 import com.core2studio.mymanager.data.utils.CurrencyUtils
+import com.core2studio.mymanager.utils.TaxCalculator
 import kotlinx.serialization.json.Json
 import java.io.File
 import java.io.FileOutputStream
@@ -41,13 +43,12 @@ class InvoiceGenerator(
         private const val LINE_HEIGHT = 20f
     }
 
-    // Colors matching Emerald Insights palette
-    private val deepSlate = android.graphics.Color.parseColor("#2C3E50")
-    private val forestGreen = android.graphics.Color.parseColor("#2D6A4F")
-    private val sageGreen = android.graphics.Color.parseColor("#40916C")
-    private val limeAccent = android.graphics.Color.parseColor("#55A859")
-    private val paleMint = android.graphics.Color.parseColor("#E8F5E9")
-    private val mintCream = android.graphics.Color.parseColor("#F0F4F8")
+    // Colors matching Heartwood palette (light mode — PDFs print on white/light stock)
+    private val deepSlate = android.graphics.Color.parseColor("#241A0F")
+    private val forestGreen = android.graphics.Color.parseColor("#A85D18")
+    private val sageGreen = android.graphics.Color.parseColor("#4F7A5C")
+    private val paleMint = android.graphics.Color.parseColor("#FBF7EE")
+    private val mintCream = android.graphics.Color.parseColor("#E9DCC0")
     private val white = android.graphics.Color.WHITE
 
     // Paint objects
@@ -115,6 +116,11 @@ class InvoiceGenerator(
      * @param businessPhone The business phone from settings
      * @param businessAddress The business address from settings
      * @param businessWebsite The business website from settings
+     * @param businessGstin The business GSTIN from settings
+     * @param gstEnabled Whether the master GST toggle is enabled (live settings fallback)
+     * @param gstPricingMode GST pricing mode fallback: "INCLUSIVE" or "EXCLUSIVE"
+     * @param gstRate GST rate fallback (0, 3, 5, 18, 40); order customFields snapshot wins when present
+     * @param gstType GST type fallback: "CGST_SGST" or "IGST"
      * @return InvoiceResult with file name and content URI, or null on failure
      */
     fun generateInvoice(
@@ -126,8 +132,84 @@ class InvoiceGenerator(
         businessPhone: String = "",
         businessAddress: String = "",
         businessWebsite: String = "",
-        businessGstin: String = ""
+        businessGstin: String = "",
+        gstEnabled: Boolean = false,
+        gstPricingMode: String = "INCLUSIVE",
+        gstRate: Int = 18,
+        gstType: String = "CGST_SGST"
     ): InvoiceResult? {
+        // Parse custom fields and cart items ONCE at the start
+        val customFields = parseCustomFields(transaction.customFields)
+        val cartItemsJson = customFields["cartItems"]
+        val items = if (cartItemsJson != null) {
+            parseCartItems(cartItemsJson)
+        } else {
+            listOf(CartItemData(
+                name = productName ?: "Service/Custom",
+                price = transaction.unitPrice,
+                quantity = transaction.quantity,
+                subtotal = transaction.unitPrice * transaction.quantity
+            ))
+        }
+
+        // Prefer order-time GST snapshot from customFields; fall back to live settings
+        val snapshotRate = customFields["gstRate"]?.toIntOrNull()
+        val effectiveGstRate = snapshotRate ?: gstRate
+        val effectiveGstType = customFields["gstType"] ?: gstType
+        val effectivePricingMode = customFields["gstPricingMode"] ?: gstPricingMode
+        // Snapshot present ⇒ GST was active when the order was placed
+        val hasGstin = businessGstin.isNotBlank() && (snapshotRate != null || gstEnabled)
+
+        // Totals come from the same engine the checkout screen uses, so the PDF can
+        // never disagree with what the user confirmed before saving the order.
+        val discountType = customFields["discountType"] ?: "AMOUNT"
+        val discountValue = customFields["discountValue"]?.toDoubleOrNull() ?: 0.0
+
+        val pricingMode = TaxCalculator.pricingModeOf(effectivePricingMode)
+        val gstTypeEnum = TaxCalculator.gstTypeOf(effectiveGstType)
+        val breakdowns = items.map { item ->
+            TaxCalculator.calculateLine(
+                unitPrice = item.price,
+                quantity = item.quantity,
+                pricingMode = pricingMode,
+                gstRate = effectiveGstRate,
+                gstType = gstTypeEnum,
+                hasGstin = hasGstin
+            )
+        }
+        val orderTotals = TaxCalculator.calculateOrder(
+            items = items.mapIndexed { index, item ->
+                OrderItemDraft(
+                    id = "invoice_$index",
+                    productId = "",
+                    productName = item.name,
+                    quantity = item.quantity,
+                    unitPrice = item.price
+                ) to breakdowns[index]
+            },
+            discountType = discountType,
+            discountValue = discountValue,
+            pricingMode = pricingMode
+        )
+
+        val subtotal = orderTotals.subtotal
+        val discountAmount = orderTotals.discountAmount
+        val totalCgst = orderTotals.totalCgst
+        val totalSgst = orderTotals.totalSgst
+        val totalIgst = orderTotals.totalIgst
+        val totalTax = orderTotals.totalTax
+        val grandTotal = orderTotals.grandTotal
+        val roundedGrandTotal = orderTotals.roundedGrandTotal
+        val roundOffAmount = orderTotals.roundOffAmount
+
+        // Percent labels come from the configured rate, not from reverse-calculating
+        // tax / subtotal, which is wrong whenever a discount is applied.
+        val halfRate = effectiveGstRate / 2
+        val cgstPercent = if (effectiveGstType == "CGST_SGST") halfRate else 0
+        val sgstPercent = if (effectiveGstType == "CGST_SGST") halfRate else 0
+        val igstPercent = if (effectiveGstType == "IGST") effectiveGstRate else 0
+        val referenceNumber = customFields["referenceNumber"] ?: ""
+
         val document = PdfDocument()
         val pageInfo = PdfDocument.PageInfo.Builder(PAGE_WIDTH, PAGE_HEIGHT, 1).create()
         val page = document.startPage(pageInfo)
@@ -159,11 +241,11 @@ class InvoiceGenerator(
             canvas.drawText("Website: $businessWebsite", MARGIN, y, bodyPaint)
             y += LINE_HEIGHT
         }
-        if (businessGstin.isNotBlank()) {
+        if (hasGstin && businessGstin.isNotBlank()) {
             canvas.drawText("GSTIN: $businessGstin", MARGIN, y, bodyPaint)
             y += LINE_HEIGHT
         }
-        if (businessPhone.isNotBlank() || businessEmail.isNotBlank() || businessAddress.isNotBlank() || businessWebsite.isNotBlank() || businessGstin.isNotBlank()) {
+        if (businessPhone.isNotBlank() || businessEmail.isNotBlank() || businessAddress.isNotBlank() || businessWebsite.isNotBlank() || (hasGstin && businessGstin.isNotBlank())) {
             y += 10f
         }
 
@@ -190,6 +272,13 @@ class InvoiceGenerator(
             val orderIdText = "Order ID: ${transaction.orderId}"
             val orderIdTextWidth = bodyPaint.measureText(orderIdText)
             canvas.drawText(orderIdText, PAGE_WIDTH - MARGIN - orderIdTextWidth, y, bodyPaint)
+        }
+
+        if (referenceNumber.isNotBlank()) {
+            y += 16f
+            val refText = "Ref: $referenceNumber"
+            val refTextWidth = bodyPaint.measureText(refText)
+            canvas.drawText(refText, PAGE_WIDTH - MARGIN - refTextWidth, y, bodyPaint)
         }
 
         y += 30f
@@ -224,27 +313,24 @@ class InvoiceGenerator(
         y += 20f
 
         // --- Line Items Table ---
-        val customFields = parseCustomFields(transaction.customFields)
-        val cartItemsJson = customFields["cartItems"]
+        val itemCol = MARGIN
+        val qtyCol = MARGIN + 230f
+        val priceCol = MARGIN + 300f
+        val amtCol = PAGE_WIDTH - MARGIN
+
+        // Table header background
+        canvas.drawRect(MARGIN - 5f, y - 14f, PAGE_WIDTH - MARGIN + 5f, y + 6f, bgPaint)
+        canvas.drawText("ITEM", itemCol, y, boldBodyPaint)
+        canvas.drawText("QTY", qtyCol, y, boldBodyPaint)
+        canvas.drawText("PRICE", priceCol, y, boldBodyPaint)
+        val amtHeader = "AMOUNT"
+        canvas.drawText(amtHeader, amtCol - boldBodyPaint.measureText(amtHeader), y, boldBodyPaint)
+        y += LINE_HEIGHT + 5f
 
         if (cartItemsJson != null) {
             // Cart-based order: show each item as a row
             val cartItems = parseCartItems(cartItemsJson)
             if (cartItems.isNotEmpty()) {
-                val itemCol = MARGIN
-                val qtyCol = MARGIN + 230f
-                val priceCol = MARGIN + 300f
-                val amtCol = PAGE_WIDTH - MARGIN
-
-                // Table header background
-                canvas.drawRect(MARGIN - 5f, y - 14f, PAGE_WIDTH - MARGIN + 5f, y + 6f, bgPaint)
-                canvas.drawText("ITEM", itemCol, y, boldBodyPaint)
-                canvas.drawText("QTY", qtyCol, y, boldBodyPaint)
-                canvas.drawText("PRICE", priceCol, y, boldBodyPaint)
-                val amtHeader = "AMOUNT"
-                canvas.drawText(amtHeader, amtCol - boldBodyPaint.measureText(amtHeader), y, boldBodyPaint)
-                y += LINE_HEIGHT + 5f
-
                 // Cart item rows
                 for (item in cartItems) {
                     canvas.drawText(item.name, itemCol, y, bodyPaint)
@@ -255,72 +341,53 @@ class InvoiceGenerator(
                     canvas.drawText(amtText, amtCol - bodyPaint.measureText(amtText), y, bodyPaint)
                     y += LINE_HEIGHT
                 }
-
-                // Subtotal line
-                y += 5f
-                canvas.drawLine(MARGIN, y, PAGE_WIDTH - MARGIN, y, linePaint)
-                y += 15f
-                canvas.drawText("Subtotal", itemCol, y, boldBodyPaint)
-                val subtotalText = CurrencyUtils.formatCurrency(transaction.amount, CurrencyUtils.loadCurrencyCode(context))
-                canvas.drawText(subtotalText, amtCol - amountPaint.measureText(subtotalText), y, amountPaint)
-                y += LINE_HEIGHT
-
-                // Other custom fields (excluding cartItems)
-                val otherFields = customFields.filterKeys { it != "cartItems" }
-                if (otherFields.isNotEmpty()) {
-                    y += 10f
-                    canvas.drawLine(MARGIN, y, PAGE_WIDTH - MARGIN, y, linePaint)
-                    y += 15f
-                    canvas.drawText("Additional Details", MARGIN, y, boldBodyPaint)
-                    y += LINE_HEIGHT
-                    for ((key, value) in otherFields) {
-                        canvas.drawText(key, MARGIN + 10f, y, smallPaint)
-                        canvas.drawText(value, MARGIN + 130f, y, bodyPaint)
-                        y += LINE_HEIGHT
-                    }
-                }
             }
         } else {
             // Manual order: same ITEM | QTY | PRICE | AMOUNT format
-            val itemCol = MARGIN
-            val qtyCol = MARGIN + 230f
-            val priceCol = MARGIN + 300f
-            val amtCol = PAGE_WIDTH - MARGIN
-
-            // Table header background
-            canvas.drawRect(MARGIN - 5f, y - 14f, PAGE_WIDTH - MARGIN + 5f, y + 6f, bgPaint)
-            canvas.drawText("ITEM", itemCol, y, boldBodyPaint)
-            canvas.drawText("QTY", qtyCol, y, boldBodyPaint)
-            canvas.drawText("PRICE", priceCol, y, boldBodyPaint)
-            val amtHeader = "AMOUNT"
-            canvas.drawText(amtHeader, amtCol - boldBodyPaint.measureText(amtHeader), y, boldBodyPaint)
-            y += LINE_HEIGHT + 5f
-
-            // Product row
             val displayName = productName ?: "Service/Custom"
             canvas.drawText(displayName, itemCol, y, bodyPaint)
             canvas.drawText("${transaction.quantity}", qtyCol, y, bodyPaint)
             val unitPriceText = CurrencyUtils.formatCurrency(transaction.unitPrice, CurrencyUtils.loadCurrencyCode(context))
             canvas.drawText(unitPriceText, priceCol, y, bodyPaint)
-            val amtText = CurrencyUtils.formatCurrency(transaction.amount, CurrencyUtils.loadCurrencyCode(context))
+            val amtText = CurrencyUtils.formatCurrency(transaction.unitPrice * transaction.quantity, CurrencyUtils.loadCurrencyCode(context))
             canvas.drawText(amtText, amtCol - bodyPaint.measureText(amtText), y, bodyPaint)
             y += LINE_HEIGHT
+        }
 
-            // Custom fields
-            customFields.forEach { (key, value) ->
-                canvas.drawText(key, itemCol + 10f, y, smallPaint)
-                canvas.drawText(value, qtyCol, y, bodyPaint)
-                y += LINE_HEIGHT
-            }
+        // Subtotal line (raw line-item sum, not payable)
+        y += 5f
+        canvas.drawLine(MARGIN, y, PAGE_WIDTH - MARGIN, y, linePaint)
+        y += 15f
+        canvas.drawText("Subtotal", itemCol, y, boldBodyPaint)
+        val subtotalText = CurrencyUtils.formatCurrency(subtotal, CurrencyUtils.loadCurrencyCode(context))
+        canvas.drawText(subtotalText, amtCol - amountPaint.measureText(subtotalText), y, amountPaint)
+        y += LINE_HEIGHT
 
-            // Subtotal line
-            y += 5f
+        // Discount line (when applied)
+        if (discountAmount > 0) {
+            canvas.drawText(if (discountType == "PERCENT") "Discount (${discountValue.toInt()}%)" else "Discount", itemCol, y, bodyPaint)
+            val discountText = "- " + CurrencyUtils.formatCurrency(discountAmount, CurrencyUtils.loadCurrencyCode(context))
+            canvas.drawText(discountText, amtCol - bodyPaint.measureText(discountText), y, bodyPaint)
+            y += LINE_HEIGHT
+        }
+
+        // Other custom fields (exclude internal/system keys)
+        val internalKeys = setOf(
+            "cartItems", "discountType", "discountValue",
+            "gstRate", "gstType", "gstPricingMode", "referenceNumber"
+        )
+        val otherFields = customFields.filterKeys { it !in internalKeys }
+        if (otherFields.isNotEmpty()) {
+            y += 10f
             canvas.drawLine(MARGIN, y, PAGE_WIDTH - MARGIN, y, linePaint)
             y += 15f
-            canvas.drawText("Subtotal", itemCol, y, boldBodyPaint)
-            val subtotalText = CurrencyUtils.formatCurrency(transaction.amount, CurrencyUtils.loadCurrencyCode(context))
-            canvas.drawText(subtotalText, amtCol - amountPaint.measureText(subtotalText), y, amountPaint)
+            canvas.drawText("Additional Details", MARGIN, y, boldBodyPaint)
             y += LINE_HEIGHT
+            for ((key, value) in otherFields) {
+                canvas.drawText(key, MARGIN + 10f, y, smallPaint)
+                canvas.drawText(value, MARGIN + 130f, y, bodyPaint)
+                y += LINE_HEIGHT
+            }
         }
 
         // --- Notes ---
@@ -358,9 +425,9 @@ class InvoiceGenerator(
         }
         val statusPaint = Paint(boldBodyPaint).apply {
             color = when (transaction.status) {
-                "COMPLETED" -> limeAccent
-                "PARTIAL" -> sageGreen
-                else -> android.graphics.Color.parseColor("#E74C3C")
+                "COMPLETED" -> android.graphics.Color.parseColor("#388E3C")
+                "PARTIAL" -> android.graphics.Color.parseColor("#F57C00")
+                else -> android.graphics.Color.parseColor("#D32F2F")
             }
             textSize = 16f
         }
@@ -378,10 +445,39 @@ class InvoiceGenerator(
         canvas.drawText(statusText, statusX, statusBadgeY, statusPaint)
 
         canvas.drawText("Total Amount:", totalsX, y, boldBodyPaint)
-        val totalText = CurrencyUtils.formatCurrency(transaction.amount, CurrencyUtils.loadCurrencyCode(context))
+        val totalText = CurrencyUtils.formatCurrency(grandTotal, CurrencyUtils.loadCurrencyCode(context))
         val totalWidth = amountPaint.measureText(totalText)
         canvas.drawText(totalText, rightEdge - totalWidth, y, amountPaint)
         y += LINE_HEIGHT + 5f
+
+        // GST Breakdown
+        if (hasGstin && totalTax > 0) {
+            if (effectiveGstType == "CGST_SGST") {
+                canvas.drawText("CGST (${cgstPercent}%)", totalsX, y, bodyPaint)
+                val cgstText = CurrencyUtils.formatCurrency(totalCgst, CurrencyUtils.loadCurrencyCode(context))
+                val cgstWidth = bodyPaint.measureText(cgstText)
+                canvas.drawText(cgstText, rightEdge - cgstWidth, y, bodyPaint)
+                y += LINE_HEIGHT + 5f
+
+                canvas.drawText("SGST (${sgstPercent}%)", totalsX, y, bodyPaint)
+                val sgstText = CurrencyUtils.formatCurrency(totalSgst, CurrencyUtils.loadCurrencyCode(context))
+                val sgstWidth = bodyPaint.measureText(sgstText)
+                canvas.drawText(sgstText, rightEdge - sgstWidth, y, bodyPaint)
+                y += LINE_HEIGHT + 5f
+            } else {
+                canvas.drawText("IGST (${igstPercent}%)", totalsX, y, bodyPaint)
+                val igstText = CurrencyUtils.formatCurrency(totalIgst, CurrencyUtils.loadCurrencyCode(context))
+                val igstWidth = bodyPaint.measureText(igstText)
+                canvas.drawText(igstText, rightEdge - igstWidth, y, bodyPaint)
+                y += LINE_HEIGHT + 5f
+            }
+
+            canvas.drawText("Total Tax", totalsX, y, boldBodyPaint)
+            val taxText = CurrencyUtils.formatCurrency(totalTax, CurrencyUtils.loadCurrencyCode(context))
+            val taxWidth = amountPaint.measureText(taxText)
+            canvas.drawText(taxText, rightEdge - taxWidth, y, amountPaint)
+            y += LINE_HEIGHT + 5f
+        }
 
         canvas.drawText("Amount Paid:", totalsX, y, bodyPaint)
         val paidText = CurrencyUtils.formatCurrency(transaction.paidAmount, CurrencyUtils.loadCurrencyCode(context))
@@ -389,9 +485,24 @@ class InvoiceGenerator(
         canvas.drawText(paidText, rightEdge - paidWidth, y, bodyPaint)
         y += LINE_HEIGHT + 5f
 
-        val balance = transaction.amount - transaction.paidAmount
+        // Round-off
+        if (roundOffAmount != 0.0) {
+            canvas.drawText("Round Off:", totalsX, y, bodyPaint)
+            val roundOffText = CurrencyUtils.formatCurrency(roundOffAmount, CurrencyUtils.loadCurrencyCode(context))
+            val roundOffWidth = bodyPaint.measureText(roundOffText)
+            canvas.drawText(roundOffText, rightEdge - roundOffWidth, y, bodyPaint)
+            y += LINE_HEIGHT + 5f
+        }
+
+        canvas.drawText("Payable Amount:", totalsX, y, boldBodyPaint)
+        val payableText = CurrencyUtils.formatCurrency(roundedGrandTotal.toDouble(), CurrencyUtils.loadCurrencyCode(context))
+        val payableWidth = amountPaint.measureText(payableText)
+        canvas.drawText(payableText, rightEdge - payableWidth, y, amountPaint)
+        y += LINE_HEIGHT + 5f
+
+        val balance = roundedGrandTotal.toDouble() - transaction.paidAmount
         val balancePaint = if (balance > 0) Paint(amountPaint).apply {
-            color = android.graphics.Color.parseColor("#E74C3C")
+            color = android.graphics.Color.parseColor("#D32F2F")
         } else amountPaint
 
         canvas.drawText("Balance Due:", totalsX, y, boldBodyPaint)
@@ -443,8 +554,8 @@ class InvoiceGenerator(
                     contentValues
                 )
 
-                downloadsUri?.let {
-                    context.contentResolver.openOutputStream(it)?.use { outputStream ->
+                downloadsUri?.let { uri ->
+                    context.contentResolver.openOutputStream(uri)?.use { outputStream ->
                         cacheFile.inputStream().use { inputStream ->
                             inputStream.copyTo(outputStream)
                         }
@@ -467,14 +578,16 @@ class InvoiceGenerator(
         }
     }
 
-    private data class CartItemData(
+    // Helper data class for cart items
+    data class CartItemData(
         val name: String,
         val price: Double,
         val quantity: Int,
         val subtotal: Double
     )
 
-    private fun parseCustomFields(json: String): Map<String, String> {
+    // Helper function to parse custom fields JSON
+    fun parseCustomFields(json: String): Map<String, String> {
         return try {
             Json.decodeFromString<Map<String, String>>(json)
         } catch (e: Exception) {
@@ -482,7 +595,8 @@ class InvoiceGenerator(
         }
     }
 
-    private fun parseCartItems(json: String): List<CartItemData> {
+    // Helper function to parse cart items JSON
+    fun parseCartItems(json: String): List<CartItemData> {
         return try {
             val items = Json.decodeFromString<List<Map<String, String>>>(json)
             items.mapNotNull { item ->

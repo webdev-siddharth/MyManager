@@ -27,6 +27,14 @@ import androidx.compose.material.icons.filled.AddAPhoto
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuAnchorType
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -48,12 +56,12 @@ import coil3.compose.AsyncImage
 import com.core2studio.mymanager.data.utils.CurrencyUtils
 import com.core2studio.mymanager.ui.components.MyManagerTopBar
 
-@OptIn(ExperimentalLayoutApi::class)
+@OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun AddProductScreen(
     categoryId: String,
     onBack: () -> Unit,
-    onSave: (name: String, description: String, price: Double, imageUris: List<String>) -> Unit = { _, _, _, _ -> }
+    onSave: (name: String, description: String, price: Double, imageUris: List<String>, hsnSacCode: String, hsnSacType: String) -> Unit = { _, _, _, _, _, _ -> }
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
     var name by remember { mutableStateOf("") }
@@ -62,6 +70,9 @@ fun AddProductScreen(
     var selectedImageUris by remember { mutableStateOf<List<Uri>>(emptyList()) }
     var nameError by remember { mutableStateOf(false) }
     var priceError by remember { mutableStateOf(false) }
+    var hsnSacCode by remember { mutableStateOf("") }
+    var hsnSacType by remember { mutableStateOf("HSN") }
+    var hsnSacTypeExpanded by remember { mutableStateOf(false) }
 
     val photoPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickMultipleVisualMedia(maxItems = 10)
@@ -260,6 +271,57 @@ fun AddProductScreen(
 
             Spacer(modifier = Modifier.height(8.dp))
 
+            // HSN/SAC Section
+            Text(
+                text = "GST Details (Optional)",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Code Type Selector
+            ExposedDropdownMenuBox(
+                expanded = hsnSacTypeExpanded,
+                onExpandedChange = { hsnSacTypeExpanded = !hsnSacTypeExpanded }
+            ) {
+                OutlinedTextField(
+                    value = hsnSacType,
+                    onValueChange = {},
+                    readOnly = true,
+                    label = { Text("Code Type") },
+                    modifier = Modifier.fillMaxWidth().menuAnchor(),
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = hsnSacTypeExpanded) }
+                )
+                ExposedDropdownMenu(
+                    expanded = hsnSacTypeExpanded,
+                    onDismissRequest = { hsnSacTypeExpanded = false }
+                ) {
+                    DropdownMenuItem(
+                        text = { Text("HSN (Goods)") },
+                        onClick = { hsnSacType = "HSN"; hsnSacTypeExpanded = false }
+                    )
+                    DropdownMenuItem(
+                        text = { Text("SAC (Services)") },
+                        onClick = { hsnSacType = "SAC"; hsnSacTypeExpanded = false }
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Code Input (2-8 digits, optional)
+            OutlinedTextField(
+                value = hsnSacCode,
+                onValueChange = { hsnSacCode = it.take(8) },
+                label = { Text("HSN/SAC Code") },
+                placeholder = { Text("e.g., 998314") },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
             // Save button
             Button(
                 onClick = {
@@ -275,7 +337,9 @@ fun AddProductScreen(
                             name.trim(),
                             description.trim(),
                             priceValue!!,
-                            selectedImageUris.map { it.toString() }
+                            selectedImageUris.map { it.toString() },
+                            hsnSacCode.trim(),
+                            hsnSacType
                         )
                     }
                 },

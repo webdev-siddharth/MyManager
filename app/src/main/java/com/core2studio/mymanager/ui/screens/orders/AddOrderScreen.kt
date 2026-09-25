@@ -299,9 +299,9 @@ fun AddOrderScreen(
             ) {
                 com.core2studio.mymanager.ui.screens.orders.statusOptions.forEach { status ->
                     val chipColor = when (status) {
-                        "PENDING" -> Color(0xFFD32F2F)
-                        "PARTIAL" -> Color(0xFFF57C00)
-                        "COMPLETED" -> Color(0xFF388E3C)
+                        "PENDING" -> com.core2studio.mymanager.theme.StatusPending
+                        "PARTIAL" -> com.core2studio.mymanager.theme.StatusPartial
+                        "COMPLETED" -> com.core2studio.mymanager.theme.StatusCompleted
                         else -> MaterialTheme.colorScheme.primary
                     }
                     FilterChip(
@@ -309,9 +309,15 @@ fun AddOrderScreen(
                         onClick = {
                             selectedStatus = status
                             when (status) {
-                                "PENDING" -> paidAmount = "0"
+                                "PENDING" -> paidAmount = "0.00"
                                 "COMPLETED" -> {
-                                    paidAmount = if (totalAmount > 0) totalAmount.toBigDecimal().toPlainString() else "0"
+                                    paidAmount = if (totalAmount > 0) String.format(Locale.getDefault(), "%.2f", totalAmount) else "0"
+                                }
+                                "PARTIAL" -> {
+                                    val current = paidAmount.toDoubleOrNull() ?: 0.0
+                                    if (totalAmount > 0 && current >= totalAmount) {
+                                        paidAmount = String.format(Locale.getDefault(), "%.2f", (totalAmount - 0.01).coerceAtLeast(0.0))
+                                    }
                                 }
                             }
                         },
@@ -336,7 +342,14 @@ fun AddOrderScreen(
             val isPaidEditable = selectedStatus == "PARTIAL"
             OutlinedTextField(
                 value = paidAmount,
-                onValueChange = { paidAmount = it },
+                onValueChange = { newText ->
+                    if (isPaidEditable) {
+                        val parsed = newText.toDoubleOrNull()
+                        if (newText.isEmpty() || newText == "." || (parsed != null && (totalAmount <= 0 || parsed < totalAmount))) {
+                            paidAmount = newText
+                        }
+                    }
+                },
                 enabled = isPaidEditable,
                 label = { Text("Advance Paid Amount") },
                 modifier = Modifier.fillMaxWidth(),

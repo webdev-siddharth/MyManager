@@ -35,10 +35,10 @@ class ProductShareGenerator(private val context: Context) {
         private const val IMAGE_MAX_HEIGHT = 200f
     }
 
-    private val deepSlate = android.graphics.Color.parseColor("#2C3E50")
-    private val forestGreen = android.graphics.Color.parseColor("#2D6A4F")
-    private val sageGreen = android.graphics.Color.parseColor("#40916C")
-    private val paleMint = android.graphics.Color.parseColor("#E8F5E9")
+    private val deepSlate = android.graphics.Color.parseColor("#241A0F")
+    private val forestGreen = android.graphics.Color.parseColor("#A85D18")
+    private val sageGreen = android.graphics.Color.parseColor("#4F7A5C")
+    private val paleMint = android.graphics.Color.parseColor("#FBF7EE")
     private val white = android.graphics.Color.WHITE
 
     private val titlePaint = Paint().apply {

@@ -35,7 +35,6 @@ import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -60,6 +59,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.core2studio.mymanager.data.local.entity.Product
+import com.core2studio.mymanager.ui.components.LoadingIndicator
 import com.core2studio.mymanager.ui.components.MyManagerTopBar
 import com.core2studio.mymanager.data.utils.CurrencyUtils
 
@@ -72,7 +72,9 @@ fun ProductDetailScreen(
     onAddImages: (List<Uri>) -> Unit,
     onRemoveImage: (String) -> Unit,
     onAddToCart: (Product, Int) -> Unit = { _, _ -> },
-    isUploading: Boolean = false
+    isUploading: Boolean = false,
+    errorMessage: String? = null,
+    onDismissError: () -> Unit = {}
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
     var isEditing by remember { mutableStateOf(false) }
@@ -80,7 +82,7 @@ fun ProductDetailScreen(
     var editDescription by remember { mutableStateOf("") }
     var editPrice by remember { mutableStateOf("") }
     var showDeleteDialog by remember { mutableStateOf(false) }
-    var quantity by remember { mutableStateOf(1) }
+    var quantity by remember { androidx.compose.runtime.mutableIntStateOf(1) }
 
     val photoPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickMultipleVisualMedia(maxItems = 10)
@@ -178,6 +180,12 @@ fun ProductDetailScreen(
                 }
             }
         },
+        snackbarHost = {
+            com.core2studio.mymanager.ui.components.ErrorSnackbarHost(
+                errorMessage = errorMessage,
+                onDismissError = onDismissError
+            )
+        },
         containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
         if (product == null) {
@@ -187,7 +195,9 @@ fun ProductDetailScreen(
                     .padding(innerPadding),
                 contentAlignment = Alignment.Center
             ) {
-                CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+                LoadingIndicator(
+                    modifier = Modifier.fillMaxSize()
+                )
             }
         } else {
             Column(

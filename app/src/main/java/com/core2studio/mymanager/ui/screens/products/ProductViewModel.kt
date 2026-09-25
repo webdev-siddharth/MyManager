@@ -80,7 +80,9 @@ class ProductViewModel(
         description: String,
         price: Double,
         imageUris: List<Uri>,
-        context: Context
+        context: Context,
+        hsnSacCode: String = "",
+        hsnSacType: String = "HSN"
     ) {
         viewModelScope.launch {
             val uid = authRepository.userId ?: return@launch
@@ -109,7 +111,9 @@ class ProductViewModel(
                     description = description,
                     price = price,
                     imageUrls = urls,
-                    cloudinaryPublicIds = publicIds
+                    cloudinaryPublicIds = publicIds,
+                    hsnSacCode = hsnSacCode,
+                    hsnSacType = hsnSacType
                 )
             ).onFailure { e ->
                 Log.e(TAG, "Failed to add product", e)

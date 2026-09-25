@@ -36,7 +36,6 @@ data class OrderUiState(
     val allClients: List<Client> = emptyList(),
     val allProducts: List<Product> = emptyList(),
     val filterStatus: String? = null,
-    val isLoading: Boolean = false,
     val errorMessage: String? = null,
     val invoiceUri: Uri? = null,
     val invoiceMessage: String? = null
@@ -62,6 +61,10 @@ class OrderViewModel(
     private var businessAddress = ""
     private var businessWebsite = ""
     private var businessGstin = ""
+    private var gstEnabled = false
+    private var gstPricingMode = "INCLUSIVE"
+    private var gstRate = 18
+    private var gstType = "CGST_SGST"
 
     init {
         loadData()
@@ -190,13 +193,17 @@ class OrderViewModel(
         _uiState.value = _uiState.value.copy(errorMessage = null)
     }
 
-    fun setBusinessInfo(name: String, email: String, phone: String, address: String, website: String = "", gstin: String = "") {
+    fun setBusinessInfo(name: String, email: String, phone: String, address: String, website: String = "", gstin: String = "", gstEnabled: Boolean = false, gstPricingMode: String = "INCLUSIVE", gstRate: Int = 18, gstType: String = "CGST_SGST") {
         businessName = name
         businessEmail = email
         businessPhone = phone
         businessAddress = address
         businessWebsite = website
         businessGstin = gstin
+        this.gstEnabled = gstEnabled
+        this.gstPricingMode = gstPricingMode
+        this.gstRate = gstRate
+        this.gstType = gstType
     }
 
     fun generateInvoice(order: Order) {
@@ -217,7 +224,11 @@ class OrderViewModel(
                     businessPhone = businessPhone,
                     businessAddress = businessAddress,
                     businessWebsite = businessWebsite,
-                    businessGstin = businessGstin
+                    businessGstin = businessGstin,
+                    gstEnabled = gstEnabled,
+                    gstPricingMode = gstPricingMode,
+                    gstRate = gstRate,
+                    gstType = gstType
                 )
             }
 

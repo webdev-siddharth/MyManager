@@ -11,6 +11,7 @@ import com.core2studio.mymanager.data.repository.ProductRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 
 data class CategoryUiState(
@@ -37,14 +38,19 @@ class CategoryViewModel(
 
     private fun loadCategories() {
         viewModelScope.launch {
-            categoryRepository.getAllCategories().collect { categories ->
-                _uiState.value = _uiState.value.copy(categories = categories)
-                val counts = mutableMapOf<String, Int>()
-                categories.forEach { category ->
-                    val products = productRepository.getProductsByCategoryOnce(category.id)
-                    counts[category.id] = products.size
-                }
-                _uiState.value = _uiState.value.copy(productCounts = counts)
+            // One pass over both tables: previously this issued a separate query per
+            // category on every emission, and the counts went stale whenever a product
+            // changed because only the categories flow was being observed.
+            combine(
+                categoryRepository.getAllCategories(),
+                productRepository.getAllProducts()
+            ) { categories, products ->
+                categories to products.groupingBy { it.categoryId }.eachCount()
+            }.collect { (categories, counts) ->
+                _uiState.value = _uiState.value.copy(
+                    categories = categories,
+                    productCounts = counts
+                )
             }
         }
     }

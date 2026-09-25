@@ -345,9 +345,9 @@ private fun createBusinessCardBitmap(
     }
     canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), bgPaint)
 
-    val deepSlate = android.graphics.Color.parseColor("#2C3E50")
-    val forestGreen = android.graphics.Color.parseColor("#2D6A4F")
-    val sageGreen = android.graphics.Color.parseColor("#40916C")
+    val deepSlate = android.graphics.Color.parseColor("#241A0F")
+    val forestGreen = android.graphics.Color.parseColor("#A85D18")
+    val sageGreen = android.graphics.Color.parseColor("#4F7A5C")
 
     // --- Left Column ---
 

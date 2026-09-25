@@ -3,41 +3,33 @@ package com.core2studio.mymanager.ui.screens.settings
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
-import androidx.compose.material.icons.filled.CloudDone
-import androidx.compose.material.icons.filled.CloudOff
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Store
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Icon
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.core2studio.mymanager.ui.components.AccountMenuItemCard
+import com.core2studio.mymanager.ui.components.AccountMenuItemVariant
 import com.core2studio.mymanager.ui.components.MyManagerCard
-import com.core2studio.mymanager.ui.components.MyManagerTopBar
 
 @Composable
 fun SettingsScreen(
@@ -51,9 +43,6 @@ fun SettingsScreen(
     var showSignOutDialog by remember { mutableStateOf(false) }
 
     Scaffold(
-        topBar = {
-            com.core2studio.mymanager.ui.components.MyManagerTopBar(title = "Account")
-        },
         containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
         Column(
@@ -66,107 +55,60 @@ fun SettingsScreen(
         ) {
             Spacer(modifier = Modifier.height(4.dp))
 
-            // Google Account Section
-            com.core2studio.mymanager.ui.components.MyManagerCard {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Icon(
-                        imageVector = if (accountEmail != null) Icons.Filled.CloudDone else Icons.Filled.CloudOff,
-                        contentDescription = null,
-                        tint = if (accountEmail != null) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline
-                    )
-                    Text(
-                        text = "Account",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                }
-                Spacer(modifier = Modifier.height(8.dp))
-
-                if (accountEmail != null) {
-                    Text(
-                        text = accountEmail,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.outline
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                } else {
-                    Text(
-                        text = "Not signed in",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
+            // Large header
+            Column {
+                Text(
+                    text = "Account",
+                    style = MaterialTheme.typography.headlineLarge,
+                    color = MaterialTheme.colorScheme.onBackground
+                )
+                Text(
+                    text = "Manage your account and business settings",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
 
-            // Profile Section
-            com.core2studio.mymanager.ui.components.MyManagerCard(
+            // Google Account (highlighted)
+            AccountMenuItemCard(
+                icon = Icons.Filled.Person,
+                title = "Account",
+                subtitle = accountEmail ?: "Not signed in",
+                showVerifiedBadge = accountEmail != null,
+                variant = AccountMenuItemVariant.Highlighted,
+                onClick = null
+            )
+
+            // Profile
+            AccountMenuItemCard(
+                icon = Icons.Filled.Person,
+                title = "Profile",
+                subtitle = "Manage your personal information",
+                variant = AccountMenuItemVariant.Default,
                 onClick = onProfileClick
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.Person,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                    Text(
-                        text = "Profile",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                }
-            }
+            )
 
-            // Business Info Section
-            com.core2studio.mymanager.ui.components.MyManagerCard(
+            // Business Info
+            AccountMenuItemCard(
+                icon = Icons.Filled.Store,
+                title = "Business Info",
+                subtitle = "Manage your business details",
+                variant = AccountMenuItemVariant.Default,
                 onClick = onBusinessInfoClick
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.Store,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                    Text(
-                        text = "Business Info",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                }
-            }
+            )
 
-            // Settings Section
-            com.core2studio.mymanager.ui.components.MyManagerCard(
+            // Settings
+            AccountMenuItemCard(
+                icon = Icons.Filled.Settings,
+                title = "Settings",
+                subtitle = "App preferences and configurations",
+                variant = AccountMenuItemVariant.Default,
                 onClick = onSettingsClick
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.Settings,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                    Text(
-                        text = "Settings",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                }
-            }
+            )
 
             // Message display
             AnimatedVisibility(visible = message != null) {
-                com.core2studio.mymanager.ui.components.MyManagerCard {
+                MyManagerCard {
                     Text(
                         text = message ?: "",
                         style = MaterialTheme.typography.bodyMedium,
@@ -179,35 +121,17 @@ fun SettingsScreen(
                 }
             }
 
-            // Sign Out of App
-            com.core2studio.mymanager.ui.components.MyManagerCard {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.Logout,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.error
-                    )
-                    Text(
-                        text = "Account",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                }
-                Spacer(modifier = Modifier.height(8.dp))
-                OutlinedButton(
-                    onClick = { showSignOutDialog = true },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Icon(imageVector = Icons.AutoMirrored.Filled.Logout, contentDescription = null)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Sign Out")
-                }
-            }
+            HorizontalDivider()
+
+            // Sign Out (danger)
+            AccountMenuItemCard(
+                icon = Icons.AutoMirrored.Filled.Logout,
+                title = "Sign Out",
+                subtitle = "Log out from your account",
+                variant = AccountMenuItemVariant.Danger,
+                compact = true,
+                onClick = { showSignOutDialog = true }
+            )
 
             Spacer(modifier = Modifier.height(16.dp))
         }

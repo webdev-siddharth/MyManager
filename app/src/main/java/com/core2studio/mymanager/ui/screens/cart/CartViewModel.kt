@@ -28,7 +28,6 @@ data class CartUiState(
     val cartItems: List<CartItem> = emptyList(),
     val cartCount: Int = 0,
     val cartTotal: Double = 0.0,
-    val isLoading: Boolean = false,
     val isCheckingOut: Boolean = false,
     val checkoutSuccess: Boolean = false,
     val errorMessage: String? = null
@@ -141,16 +140,39 @@ class CartViewModel(
         }
     }
 
-    fun checkout(clientId: String, notes: String, status: String, paidAmount: Double, paymentMethod: String = "", customFields: Map<String, String>) {
+    fun checkout(
+        clientId: String,
+        notes: String,
+        status: String,
+        paidAmount: Double,
+        paymentMethod: String = "",
+        discountType: String = "AMOUNT",
+        discountValue: Double = 0.0,
+        referenceNumber: String = "",
+        grandTotal: Double = 0.0,
+        hasGstin: Boolean = false,
+        gstRate: Int = 18,
+        gstPricingMode: String = "INCLUSIVE",
+        gstType: String = "CGST_SGST",
+        customFields: Map<String, String>
+    ) {
+        // Guard synchronously, before the coroutine is dispatched: a check inside the
+        // launched block lets a fast double-tap place the same order twice.
         if (_uiState.value.isCheckingOut) return
+        _uiState.value = _uiState.value.copy(isCheckingOut = true)
         viewModelScope.launch {
-            val uid = authRepository.userId ?: return@launch
+            val uid = authRepository.userId
+            if (uid == null) {
+                _uiState.value = _uiState.value.copy(isCheckingOut = false, errorMessage = "You must be signed in to place an order")
+                return@launch
+            }
             val cartItems = _uiState.value.cartItems
-            if (cartItems.isEmpty()) return@launch
+            if (cartItems.isEmpty()) {
+                _uiState.value = _uiState.value.copy(isCheckingOut = false, errorMessage = "Your cart is empty")
+                return@launch
+            }
 
-            _uiState.value = _uiState.value.copy(isCheckingOut = true)
-
-            val totalAmount = cartItems.sumOf { it.price * it.quantity }
+            val amount = if (grandTotal > 0) grandTotal else cartItems.sumOf { it.price * it.quantity }
             val productNames = cartItems.joinToString(", ") { it.productName }
 
             val cartDetails = cartItems.map { item ->
@@ -158,16 +180,31 @@ class CartViewModel(
                     "productName" to item.productName,
                     "price" to item.price.toString(),
                     "quantity" to item.quantity.toString(),
-                    "subtotal" to (item.price * item.quantity).toString()
+                    "subtotal" to (item.price * item.quantity).toString(),
+                    "hsnSacCode" to "",
+                    "hsnSacType" to "HSN"
                 )
             }
             val allCustomFields = customFields.toMutableMap()
             allCustomFields["cartItems"] = Json.encodeToString(cartDetails)
+            if (discountValue > 0) {
+                allCustomFields["discountType"] = discountType
+                allCustomFields["discountValue"] = discountValue.toString()
+            }
+            if (referenceNumber.isNotBlank()) {
+                allCustomFields["referenceNumber"] = referenceNumber
+            }
+            if (hasGstin) {
+                allCustomFields["gstRate"] = gstRate.toString()
+                allCustomFields["gstType"] = gstType
+                allCustomFields["gstPricingMode"] = gstPricingMode
+            }
 
             val order = Order(
                 clientId = clientId,
                 productName = if (cartItems.size == 1) cartItems.first().productName else productNames,
-                amount = totalAmount,
+                quantity = cartItems.sumOf { it.quantity },
+                amount = amount,
                 paidAmount = paidAmount,
                 status = status,
                 paymentMethod = paymentMethod,
@@ -176,10 +213,16 @@ class CartViewModel(
             )
 
             firestoreOrderRepository.insertOrder(uid, order).onSuccess {
+                var clearCartError: String? = null
                 firestoreCartRepository.clearCart(uid).onFailure { e ->
                     Log.e(TAG, "Failed to clear cart after checkout", e)
+                    clearCartError = "Order saved, but the cart could not be cleared: ${e.message}"
                 }
-                _uiState.value = _uiState.value.copy(isCheckingOut = false, checkoutSuccess = true)
+                _uiState.value = _uiState.value.copy(
+                    isCheckingOut = false,
+                    checkoutSuccess = true,
+                    errorMessage = clearCartError
+                )
             }.onFailure { e ->
                 Log.e(TAG, "Failed to create order from cart", e)
                 _uiState.value = _uiState.value.copy(isCheckingOut = false, errorMessage = "Failed to place order: ${e.message}")

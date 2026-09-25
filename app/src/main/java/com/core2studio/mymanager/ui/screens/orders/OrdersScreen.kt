@@ -52,7 +52,9 @@ fun OrdersScreen(
     searchQuery: String = "",
     filteredOrders: List<Order> = emptyList(),
     onSearchQueryChange: (String) -> Unit = {},
-    clientNameResolver: (String) -> String = { "Unknown Client" }
+    clientNameResolver: (String) -> String = { "Unknown Client" },
+    errorMessage: String? = null,
+    onDismissError: () -> Unit = {}
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
     var filterState by remember { mutableStateOf(OrderFilterState()) }
@@ -112,6 +114,12 @@ fun OrdersScreen(
                 onClick = onAddOrder,
                 icon = Icons.Filled.Add,
                 text = "New Order"
+            )
+        },
+        snackbarHost = {
+            com.core2studio.mymanager.ui.components.ErrorSnackbarHost(
+                errorMessage = errorMessage,
+                onDismissError = onDismissError
             )
         },
         containerColor = MaterialTheme.colorScheme.background

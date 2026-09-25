@@ -1,5 +1,6 @@
 package com.core2studio.mymanager.ui.screens.cart
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -8,24 +9,23 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Calculate
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.People
+import androidx.compose.material.icons.filled.ShoppingBag
+import androidx.compose.material.icons.filled.Wallet
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuAnchorType
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -34,67 +34,133 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.core2studio.mymanager.data.local.entity.Client
+import com.core2studio.mymanager.data.local.entity.OrderItemDraft
 import com.core2studio.mymanager.data.utils.CurrencyUtils
-
+import com.core2studio.mymanager.ui.components.ButtonLoadingIndicator
+import com.core2studio.mymanager.ui.components.ClientPickerField
 import com.core2studio.mymanager.ui.components.MyManagerTopBar
+import com.core2studio.mymanager.ui.components.PaymentSection
+import com.core2studio.mymanager.ui.components.PricingSummaryCard
+import com.core2studio.mymanager.ui.components.SectionCard
 import com.core2studio.mymanager.ui.screens.clients.AddClientDialog
-import java.util.Locale
+import com.core2studio.mymanager.ui.screens.orders.dashedBorder
+import com.core2studio.mymanager.utils.TaxCalculator
 
-private val statusOptions = listOf("PENDING", "PARTIAL", "COMPLETED")
-
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CheckoutScreen(
     cartViewModel: CartViewModel,
     clients: List<Client> = emptyList(),
     onBack: () -> Unit,
-    onAddClient: (name: String, phone: String, email: String, address: String) -> Unit = { _, _, _, _ -> }
+    onAddClient: (name: String, phone: String, email: String, address: String) -> Unit = { _, _, _, _ -> },
+    gstEnabled: Boolean = false,
+    gstin: String = "",
+    gstPricingMode: String = "INCLUSIVE",
+    gstRate: Int = 18,
+    gstType: String = "CGST_SGST"
 ) {
-    val context = androidx.compose.ui.platform.LocalContext.current
+    val context = LocalContext.current
     val uiState by cartViewModel.uiState.collectAsState()
+    val currencySymbol = CurrencyUtils.getCurrencySymbol(CurrencyUtils.loadCurrencyCode(context))
 
-    var selectedClient by remember { mutableStateOf<Client?>(null) }
-    var clientMenuExpanded by remember { mutableStateOf(false) }
+    var selectedClientId by remember { mutableStateOf("") }
     var showAddClientDialog by remember { mutableStateOf(false) }
-    var selectedStatus by remember { mutableStateOf("PENDING") }
-    var paidAmount by remember { mutableStateOf("") }
-    var paymentMethod by remember { mutableStateOf("Cash-in-hand") }
-    var paymentMethodExpanded by remember { mutableStateOf(false) }
-    var notes by remember { mutableStateOf("") }
     var clientError by remember { mutableStateOf(false) }
+    val snackbarHostState = remember { SnackbarHostState() }
     var showSuccessDialog by remember { mutableStateOf(false) }
 
-    val customFieldKeys = remember { mutableStateListOf<String>() }
-    val customFieldValues = remember { mutableStateListOf<String>() }
+    var discountType by remember { mutableStateOf("AMOUNT") }
+    var discountValue by remember { mutableDoubleStateOf(0.0) }
 
-    val textFieldColors = OutlinedTextFieldDefaults.colors(
-        focusedBorderColor = MaterialTheme.colorScheme.primary,
-        unfocusedBorderColor = MaterialTheme.colorScheme.outline,
-        cursorColor = MaterialTheme.colorScheme.primary,
-        focusedLabelColor = MaterialTheme.colorScheme.primary
-    )
+    var status by remember { mutableStateOf("PENDING") }
+    var paidAmount by remember { mutableDoubleStateOf(0.0) }
+    var paymentMethod by remember { mutableStateOf("Cash") }
+    var referenceNumber by remember { mutableStateOf("") }
+
+    var notes by remember { mutableStateOf("") }
+    var customFields by remember { mutableStateOf(mapOf<String, String>()) }
+    var additionalExpanded by remember { mutableStateOf(false) }
+
+    val hasGstin = gstEnabled && gstin.isNotBlank()
+
+    // Pricing math — same as CreateOrderUiState
+    val pricingMode = TaxCalculator.pricingModeOf(gstPricingMode)
+    val gstTypeEnum = TaxCalculator.gstTypeOf(gstType)
+    val itemBreakdowns = remember(uiState.cartItems, gstPricingMode, gstRate, gstType, hasGstin) {
+        uiState.cartItems.map { item ->
+            TaxCalculator.calculateLine(
+                unitPrice = item.price,
+                quantity = item.quantity,
+                pricingMode = pricingMode,
+                gstRate = gstRate,
+                gstType = gstTypeEnum,
+                hasGstin = hasGstin
+            )
+        }
+    }
+    val orderDraftItems = remember(uiState.cartItems) {
+        uiState.cartItems.mapIndexed { index, item ->
+            OrderItemDraft(
+                id = item.id.ifBlank { "cart_$index" },
+                productId = item.productId,
+                productName = item.productName,
+                quantity = item.quantity,
+                unitPrice = item.price
+            )
+        }
+    }
+    val orderTotals = remember(uiState.cartItems, itemBreakdowns, discountType, discountValue, pricingMode) {
+        if (orderDraftItems.isNotEmpty()) {
+            TaxCalculator.calculateOrder(
+                items = orderDraftItems.zip(itemBreakdowns),
+                discountType = discountType,
+                discountValue = discountValue,
+                pricingMode = pricingMode
+            )
+        } else null
+    }
+
+    val subtotal = remember(uiState.cartItems) { uiState.cartItems.sumOf { it.price * it.quantity } }
+    val discountAmount = orderTotals?.discountAmount ?: 0.0
+    val taxableAmount = orderTotals?.taxableAmount ?: subtotal
+    val totalCgst = orderTotals?.totalCgst ?: 0.0
+    val totalSgst = orderTotals?.totalSgst ?: 0.0
+    val totalIgst = orderTotals?.totalIgst ?: 0.0
+    val totalTax = orderTotals?.totalTax ?: 0.0
+    val grandTotal = orderTotals?.grandTotal ?: subtotal
+    val roundedGrandTotal = orderTotals?.roundedGrandTotal ?: Math.round(subtotal)
+    val roundOffAmount = orderTotals?.roundOffAmount ?: 0.0
 
     LaunchedEffect(uiState.checkoutSuccess) {
         if (uiState.checkoutSuccess) {
             showSuccessDialog = true
             cartViewModel.resetCheckoutSuccess()
+        }
+    }
+
+    LaunchedEffect(uiState.errorMessage) {
+        uiState.errorMessage?.let { message ->
+            snackbarHostState.showSnackbar(message)
+            cartViewModel.clearError()
         }
     }
 
@@ -133,6 +199,72 @@ fun CheckoutScreen(
                 onBackClick = onBack
             )
         },
+        bottomBar = {
+            androidx.compose.material3.BottomAppBar(
+                containerColor = MaterialTheme.colorScheme.surfaceContainerLow
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column {
+                        Text("Payable", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(
+                            "$currencySymbol$roundedGrandTotal",
+                            style = MaterialTheme.typography.titleLarge.copy(color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+                        )
+                    }
+                    Button(
+                        onClick = {
+                            clientError = selectedClientId.isBlank()
+                            if (!clientError && uiState.cartItems.isNotEmpty()) {
+                                val allCustomFields = customFields.toMutableMap()
+                                if (referenceNumber.isNotBlank()) {
+                                    allCustomFields["referenceNumber"] = referenceNumber
+                                }
+                                if (discountValue > 0) {
+                                    allCustomFields["discountType"] = discountType
+                                    allCustomFields["discountValue"] = discountValue.toString()
+                                }
+                                if (hasGstin) {
+                                    allCustomFields["gstRate"] = gstRate.toString()
+                                    allCustomFields["gstType"] = gstType
+                                    allCustomFields["gstPricingMode"] = gstPricingMode
+                                }
+
+                                cartViewModel.checkout(
+                                    clientId = selectedClientId,
+                                    notes = notes.trim(),
+                                    status = status,
+                                    paidAmount = paidAmount,
+                                    paymentMethod = paymentMethod,
+                                    discountType = discountType,
+                                    discountValue = discountValue,
+                                    referenceNumber = referenceNumber,
+                                    grandTotal = roundedGrandTotal.toDouble(),
+                                    hasGstin = hasGstin,
+                                    gstRate = gstRate,
+                                    gstPricingMode = gstPricingMode,
+                                    gstType = gstType,
+                                    customFields = allCustomFields
+                                )
+                            }
+                        },
+                        enabled = !uiState.isCheckingOut && uiState.cartItems.isNotEmpty(),
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        if (uiState.isCheckingOut) {
+                            ButtonLoadingIndicator(modifier = Modifier.size(20.dp))
+                        } else {
+                            Text("Place Order", style = MaterialTheme.typography.labelMedium)
+                        }
+                    }
+                }
+            }
+        },
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
         Column(
@@ -143,326 +275,229 @@ fun CheckoutScreen(
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Client selector
-            ExposedDropdownMenuBox(
-                expanded = clientMenuExpanded,
-                onExpandedChange = { clientMenuExpanded = !clientMenuExpanded }
+            // Section 1: Client
+            SectionCard(
+                title = "Client",
+                icon = Icons.Filled.People,
+                subtitle = "Select a client for this order"
             ) {
-                OutlinedTextField(
-                    value = selectedClient?.name ?: "",
-                    onValueChange = {},
-                    readOnly = true,
-                    label = { Text("Select Client *") },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .menuAnchor(),
-                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = clientMenuExpanded) },
-                    isError = clientError,
-                    supportingText = if (clientError) {
-                        { Text("Please select a client") }
-                    } else null,
-                    colors = textFieldColors
+                ClientPickerField(
+                    clients = clients,
+                    selectedClient = clients.find { it.id == selectedClientId },
+                    onSelect = { client ->
+                        selectedClientId = client.id
+                        clientError = false
+                    },
+                    onClear = { selectedClientId = "" },
+                    onCreateNew = { showAddClientDialog = true }
                 )
-                ExposedDropdownMenu(
-                    expanded = clientMenuExpanded,
-                    onDismissRequest = { clientMenuExpanded = false }
-                ) {
-                    clients.forEach { client ->
-                        DropdownMenuItem(
-                            text = { Text(client.name) },
-                            onClick = {
-                                selectedClient = client
-                                clientError = false
-                                clientMenuExpanded = false
-                            }
-                        )
-                    }
-                    HorizontalDivider()
-                    DropdownMenuItem(
-                        text = { Text("+ Create New Client", color = MaterialTheme.colorScheme.primary) },
-                        onClick = {
-                            clientMenuExpanded = false
-                            showAddClientDialog = true
+                if (clientError) {
+                    Text(
+                        "Please select a client",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
+            }
+
+            // Section 2: Order Items (read-only cart)
+            SectionCard(
+                title = "Order Items",
+                icon = Icons.Filled.ShoppingBag,
+                subtitle = "Items from your cart"
+            ) {
+                if (uiState.cartItems.isEmpty()) {
+                    Text(
+                        "Cart is empty",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                } else {
+                    uiState.cartItems.forEach { item ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = "${item.productName} × ${item.quantity}",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                modifier = Modifier.weight(1f)
+                            )
+                            Text(
+                                text = CurrencyUtils.formatCurrency(item.price * item.quantity, CurrencyUtils.loadCurrencyCode(context)),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
                         }
-                    )
-                    if (clients.isEmpty()) {
-                        DropdownMenuItem(
-                            text = {
-                                Text(
-                                    "No clients available",
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            },
-                            onClick = { clientMenuExpanded = false }
-                        )
                     }
                 }
             }
 
-            // Order summary
-            Text(
-                text = "Order Summary",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface
-            )
+            // Section 3: Pricing Summary
+            SectionCard(
+                title = "Pricing",
+                icon = Icons.Filled.Calculate,
+                subtitle = "Order summary and tax calculation"
+            ) {
+                PricingSummaryCard(
+                    subtotal = subtotal,
+                    discountAmount = discountAmount,
+                    taxableAmount = taxableAmount,
+                    totalCgst = totalCgst,
+                    totalSgst = totalSgst,
+                    totalIgst = totalIgst,
+                    totalTax = totalTax,
+                    grandTotal = grandTotal,
+                    roundedGrandTotal = roundedGrandTotal,
+                    roundOffAmount = roundOffAmount,
+                    hasGstin = hasGstin,
+                    gstType = gstType,
+                    gstRate = gstRate,
+                    currencySymbol = currencySymbol,
+                    discountType = discountType,
+                    discountValue = discountValue,
+                    onDiscountChange = { type, value ->
+                        discountType = type
+                        discountValue = value
+                    }
+                )
+            }
 
-            uiState.cartItems.forEach { item ->
-                Row(
+            // Section 4: Payment
+            SectionCard(
+                title = "Payment",
+                icon = Icons.Filled.Wallet,
+                subtitle = "Record payment details for this order"
+            ) {
+                PaymentSection(
+                    status = status,
+                    onStatusChange = { status = it },
+                    paidAmount = paidAmount,
+                    onPaidAmountChange = { paidAmount = it },
+                    paymentMethod = paymentMethod,
+                    onPaymentMethodChange = { paymentMethod = it },
+                    referenceNumber = referenceNumber,
+                    onReferenceChange = { referenceNumber = it },
+                    grandTotal = grandTotal,
+                    currencySymbol = currencySymbol
+                )
+            }
+
+            // Section 5: Additional Details (collapsible)
+            SectionCard(
+                title = "Additional Details",
+                subtitle = "Add any extra information for this order",
+                isCollapsible = true,
+                isExpanded = additionalExpanded,
+                onToggle = { additionalExpanded = !additionalExpanded }
+            ) {
+                // Notes
+                Text("Notes", style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
+                Text("Add a note for this order (optional)", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Spacer(Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = notes,
+                    onValueChange = { if (it.length <= 300) notes = it },
+                    placeholder = { Text("Write a note...") },
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(
-                        text = "${item.productName} x${item.quantity}",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurface
+                    minLines = 4,
+                    maxLines = 6,
+                    supportingText = { Text("${notes.length}/300") },
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                        cursorColor = MaterialTheme.colorScheme.primary
                     )
-                    Text(
-                        text = CurrencyUtils.formatCurrency(item.price * item.quantity, CurrencyUtils.loadCurrencyCode(context)),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                }
-            }
-
-            HorizontalDivider(color = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    text = "Total",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
                 )
-                Text(
-                    text = CurrencyUtils.formatCurrency(uiState.cartTotal, CurrencyUtils.loadCurrencyCode(context)),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary
-                )
-            }
 
-            // Status chips
-            Text(
-                text = "Status",
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                statusOptions.forEach { status ->
-                    val chipColor = when (status) {
-                        "PENDING" -> Color(0xFFD32F2F)
-                        "PARTIAL" -> Color(0xFFF57C00)
-                        "COMPLETED" -> Color(0xFF388E3C)
-                        else -> MaterialTheme.colorScheme.primary
-                    }
-                    FilterChip(
-                        selected = selectedStatus == status,
-                        onClick = {
-                            selectedStatus = status
-                            when (status) {
-                                "PENDING" -> paidAmount = "0"
-                                "COMPLETED" -> {
-                                    paidAmount = String.format(Locale.getDefault(), "%.2f", uiState.cartTotal)
+                Spacer(Modifier.height(16.dp))
+                HorizontalDivider()
+                Spacer(Modifier.height(16.dp))
+
+                // Custom Fields
+                Text("Custom Fields", style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
+                Text("Add custom information fields (optional)", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Spacer(Modifier.height(8.dp))
+
+                val entriesList = customFields.entries.toList()
+                entriesList.forEachIndexed { index, entry ->
+                    key(index) {
+                        val k = entry.key
+                        val v = entry.value
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth().padding(8.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                OutlinedTextField(
+                                    value = k,
+                                    onValueChange = { newKey ->
+                                        val newMap = linkedMapOf<String, String>()
+                                        customFields.entries.forEachIndexed { i, (key, value) ->
+                                            if (i == index) newMap[newKey] = value
+                                            else newMap[key] = value
+                                        }
+                                        customFields = newMap
+                                    },
+                                    placeholder = { Text("Field Label") },
+                                    modifier = Modifier.weight(1f),
+                                    singleLine = true,
+                                    colors = OutlinedTextFieldDefaults.colors(
+                                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                                        unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                                        cursorColor = MaterialTheme.colorScheme.primary
+                                    )
+                                )
+                                OutlinedTextField(
+                                    value = v,
+                                    onValueChange = { newValue ->
+                                        customFields = customFields + (k to newValue)
+                                    },
+                                    placeholder = { Text("Value") },
+                                    modifier = Modifier.weight(1f),
+                                    singleLine = true,
+                                    colors = OutlinedTextFieldDefaults.colors(
+                                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                                        unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                                        cursorColor = MaterialTheme.colorScheme.primary
+                                    )
+                                )
+                                IconButton(onClick = {
+                                    customFields = customFields - k
+                                }) {
+                                    Icon(Icons.Filled.Delete, contentDescription = "Remove", tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(20.dp))
                                 }
                             }
-                        },
-                        label = { Text(status) },
-                        colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = chipColor,
-                            selectedLabelColor = Color.White,
-                            containerColor = MaterialTheme.colorScheme.surface,
-                            labelColor = MaterialTheme.colorScheme.onSurface
-                        ),
-                        border = FilterChipDefaults.filterChipBorder(
-                            borderColor = chipColor,
-                            selectedBorderColor = chipColor,
-                            enabled = true,
-                            selected = selectedStatus == status
-                        )
-                    )
-                }
-            }
-
-            // Paid Amount
-            val isPaidEditable = selectedStatus == "PARTIAL"
-            OutlinedTextField(
-                value = paidAmount,
-                onValueChange = { paidAmount = it },
-                enabled = isPaidEditable,
-                label = { Text("Advance Paid Amount") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                prefix = { Text(CurrencyUtils.getCurrencySymbol(CurrencyUtils.loadCurrencyCode(context))) },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = MaterialTheme.colorScheme.primary,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.outline,
-                    cursorColor = MaterialTheme.colorScheme.primary,
-                    focusedLabelColor = MaterialTheme.colorScheme.primary,
-                    disabledTextColor = MaterialTheme.colorScheme.onSurface,
-                    disabledBorderColor = MaterialTheme.colorScheme.outline,
-                    disabledLabelColor = MaterialTheme.colorScheme.outline
-                )
-            )
-
-            // Payment Method
-            ExposedDropdownMenuBox(
-                expanded = paymentMethodExpanded,
-                onExpandedChange = { paymentMethodExpanded = !paymentMethodExpanded }
-            ) {
-                OutlinedTextField(
-                    value = paymentMethod,
-                    onValueChange = {},
-                    readOnly = true,
-                    label = { Text("Payment Method") },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable),
-                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = paymentMethodExpanded) },
-                    colors = textFieldColors
-                )
-                ExposedDropdownMenu(
-                    expanded = paymentMethodExpanded,
-                    onDismissRequest = { paymentMethodExpanded = false }
-                ) {
-                    listOf("Cash-in-hand", "UPI", "Bank Transfer").forEach { method ->
-                        DropdownMenuItem(
-                            text = { Text(method) },
-                            onClick = {
-                                paymentMethod = method
-                                paymentMethodExpanded = false
-                            }
-                        )
-                    }
-                }
-            }
-
-            // Custom Fields
-            Text(
-                text = "Custom Fields",
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-
-            customFieldKeys.forEachIndexed { index, key ->
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    OutlinedTextField(
-                        value = key,
-                        onValueChange = { customFieldKeys[index] = it },
-                        label = { Text("Key") },
-                        modifier = Modifier.weight(1f),
-                        singleLine = true,
-                        colors = textFieldColors
-                    )
-                    OutlinedTextField(
-                        value = customFieldValues[index],
-                        onValueChange = { customFieldValues[index] = it },
-                        label = { Text("Value") },
-                        modifier = Modifier.weight(1f),
-                        singleLine = true,
-                        colors = textFieldColors
-                    )
-                    IconButton(
-                        onClick = {
-                            customFieldKeys.removeAt(index)
-                            customFieldValues.removeAt(index)
                         }
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.Close,
-                            contentDescription = "Remove field",
-                            tint = MaterialTheme.colorScheme.error
-                        )
                     }
                 }
-            }
 
-            OutlinedButton(
-                onClick = {
-                    customFieldKeys.add("")
-                    customFieldValues.add("")
-                },
-                colors = ButtonDefaults.outlinedButtonColors(
-                    contentColor = MaterialTheme.colorScheme.primary
-                )
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.Add,
-                    contentDescription = null
-                )
-                Spacer(modifier = Modifier.width(4.dp))
-                Text("Add Custom Field")
-            }
+                Spacer(Modifier.height(8.dp))
 
-            // Notes
-            OutlinedTextField(
-                value = notes,
-                onValueChange = { notes = it },
-                label = { Text("Notes") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(120.dp),
-                maxLines = 5,
-                colors = textFieldColors
-            )
+                OutlinedButton(
+                    onClick = {
+                        customFields = customFields + ("" to "")
+                    },
+                    modifier = Modifier.fillMaxWidth().dashedBorder(
+                        color = MaterialTheme.colorScheme.primary,
+                        cornerRadius = 12.dp
+                    ),
+                    shape = RoundedCornerShape(12.dp),
+                    border = BorderStroke(0.dp, Color.Transparent)
+                ) {
+                    Icon(Icons.Filled.Add, contentDescription = null, modifier = Modifier.size(20.dp), tint = MaterialTheme.colorScheme.primary)
+                    Spacer(Modifier.width(4.dp))
+                    Text("Add Custom Field", color = MaterialTheme.colorScheme.primary)
+                }
+            }
 
             Spacer(modifier = Modifier.height(8.dp))
-
-            // Place Order button
-            Button(
-                onClick = {
-                    val isClientValid = selectedClient != null
-                    clientError = !isClientValid
-
-                    if (isClientValid) {
-                        val customFieldsMap = mutableMapOf<String, String>()
-                        customFieldKeys.forEachIndexed { index, k ->
-                            if (k.isNotBlank()) {
-                                customFieldsMap[k] = customFieldValues[index]
-                            }
-                        }
-
-                        cartViewModel.checkout(
-                            clientId = selectedClient!!.id,
-                            notes = notes.trim(),
-                            status = selectedStatus,
-                            paidAmount = paidAmount.toDoubleOrNull() ?: 0.0,
-                            paymentMethod = paymentMethod,
-                            customFields = customFieldsMap
-                        )
-                    }
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(52.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = MaterialTheme.colorScheme.onPrimary
-                ),
-                shape = RoundedCornerShape(12.dp),
-                elevation = ButtonDefaults.buttonElevation(
-                    defaultElevation = 0.dp,
-                    pressedElevation = 0.dp
-                )
-            ) {
-                Text(
-                    text = "Place Order",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onPrimary
-                )
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
         }
     }
 }

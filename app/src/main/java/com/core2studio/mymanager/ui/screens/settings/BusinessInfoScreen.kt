@@ -30,6 +30,7 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Phone
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Store
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -72,9 +73,10 @@ fun BusinessInfoScreen(
     website: String = "",
     isUploadingLogo: Boolean = false,
     onSaveBusinessInfo: (name: String, email: String, phone: String, address: String, gstin: String, website: String) -> Unit = { _, _, _, _, _, _ -> },
-    onUploadLogo: (Uri) -> Unit = {},
+    onUploadLogo: (android.net.Uri) -> Unit = {},
     onClearLogo: () -> Unit = {},
     onViewBusinessCard: () -> Unit = {},
+    onGstSettingsClick: () -> Unit = {},
     onBack: () -> Unit = {}
 ) {
     var isEditMode by remember { mutableStateOf(false) }
@@ -194,7 +196,7 @@ fun BusinessInfoScreen(
                                 imageVector = Icons.Filled.Store,
                                 contentDescription = "Business Logo",
                                 modifier = Modifier.size(48.dp),
-                                tint = MaterialTheme.colorScheme.outline
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
 
@@ -415,6 +417,24 @@ fun BusinessInfoScreen(
                     Spacer(modifier = Modifier.width(8.dp))
                     Text("Edit Business Info")
                 }
+
+                if (gstin.isNotBlank()) {
+                    Spacer(modifier = Modifier.height(12.dp))
+                    OutlinedButton(
+                        onClick = onGstSettingsClick,
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Settings,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("GST Settings", color = MaterialTheme.colorScheme.primary)
+                    }
+                }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -498,14 +518,14 @@ private fun InfoRow(
         Icon(
             imageVector = icon,
             contentDescription = null,
-            tint = MaterialTheme.colorScheme.outline,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(top = 2.dp)
         )
         Column {
             Text(
                 text = label,
                 style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.outline
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Text(
                 text = value,

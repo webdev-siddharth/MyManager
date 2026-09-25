@@ -46,7 +46,9 @@ fun ClientsScreen(
     showAddDialog: Boolean = false,
     onShowAddDialog: () -> Unit = {},
     onDismissAddDialog: () -> Unit = {},
-    onAddClient: (name: String, phone: String, email: String, address: String) -> Unit = { _, _, _, _ -> }
+    onAddClient: (name: String, phone: String, email: String, address: String) -> Unit = { _, _, _, _ -> },
+    errorMessage: String? = null,
+    onDismissError: () -> Unit = {}
 ) {
     var arrangeOption by remember { mutableStateOf(ClientArrangeOption.RECENT) }
     var showArrangeSheet by remember { mutableStateOf(false) }
@@ -87,6 +89,12 @@ fun ClientsScreen(
                 onClick = onShowAddDialog,
                 icon = Icons.Filled.Add,
                 text = "New Client"
+            )
+        },
+        snackbarHost = {
+            com.core2studio.mymanager.ui.components.ErrorSnackbarHost(
+                errorMessage = errorMessage,
+                onDismissError = onDismissError
             )
         },
         containerColor = MaterialTheme.colorScheme.background
@@ -148,7 +156,7 @@ fun ClientsScreen(
                                     androidx.compose.material3.Icon(
                                         imageVector = Icons.Filled.Phone,
                                         contentDescription = null,
-                                        tint = MaterialTheme.colorScheme.outline,
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
                                         modifier = Modifier.height(16.dp)
                                     )
                                     Text(
@@ -163,7 +171,7 @@ fun ClientsScreen(
                                     androidx.compose.material3.Icon(
                                         imageVector = Icons.Filled.Email,
                                         contentDescription = null,
-                                        tint = MaterialTheme.colorScheme.outline,
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
                                         modifier = Modifier.height(16.dp)
                                     )
                                     Text(

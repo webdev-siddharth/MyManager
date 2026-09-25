@@ -19,7 +19,6 @@ import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -40,12 +39,13 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.core2studio.mymanager.ui.components.ButtonLoadingIndicator
 
 @Composable
 fun LoginScreen(
     viewModel: com.core2studio.mymanager.ui.screens.auth.AuthViewModel,
     onNavigateToSignUp: () -> Unit,
-    onNavigateToForgotPassword: (String) -> Unit
+    onNavigateToForgotPassword: () -> Unit
 ) {
     val state by viewModel.uiState.collectAsState()
     var passwordVisible by remember { mutableStateOf(false) }
@@ -86,7 +86,7 @@ fun LoginScreen(
             value = state.email,
             onValueChange = { viewModel.updateEmail(it) },
             label = { Text("Email") },
-            leadingIcon = { Icon(Icons.Filled.Email, contentDescription = null, tint = MaterialTheme.colorScheme.outline) },
+            leadingIcon = { Icon(Icons.Filled.Email, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant) },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
             colors = textFieldColors,
@@ -99,13 +99,13 @@ fun LoginScreen(
             value = state.password,
             onValueChange = { viewModel.updatePassword(it) },
             label = { Text("Password") },
-            leadingIcon = { Icon(Icons.Filled.Lock, contentDescription = null, tint = MaterialTheme.colorScheme.outline) },
+            leadingIcon = { Icon(Icons.Filled.Lock, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant) },
             trailingIcon = {
                 IconButton(onClick = { passwordVisible = !passwordVisible }) {
                     Icon(
                         imageVector = if (passwordVisible) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
                         contentDescription = if (passwordVisible) "Hide password" else "Show password",
-                        tint = MaterialTheme.colorScheme.outline
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             },
@@ -125,7 +125,7 @@ fun LoginScreen(
             fontWeight = FontWeight.SemiBold,
             modifier = Modifier
                 .align(Alignment.End)
-                .clickable(enabled = !state.isLoading) { onNavigateToForgotPassword(state.email) }
+                .clickable(enabled = !state.isLoading) { onNavigateToForgotPassword() }
         )
 
         state.error?.let { errorText ->
@@ -151,11 +151,7 @@ fun LoginScreen(
             shape = RoundedCornerShape(12.dp)
         ) {
             if (state.isLoading) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(24.dp),
-                    color = MaterialTheme.colorScheme.onPrimary,
-                    strokeWidth = 2.dp
-                )
+                ButtonLoadingIndicator(modifier = Modifier.size(24.dp))
             } else {
                 Text("Sign In", fontWeight = FontWeight.SemiBold)
             }

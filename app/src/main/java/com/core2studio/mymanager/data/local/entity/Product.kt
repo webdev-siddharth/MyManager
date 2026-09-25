@@ -12,5 +12,7 @@ data class Product(
     val price: Double = 0.0,
     val imageUrls: List<String> = emptyList(),
     val cloudinaryPublicIds: List<String> = emptyList(),
-    val createdAt: Long = System.currentTimeMillis()
+    val createdAt: Long = System.currentTimeMillis(),
+    val hsnSacCode: String = "",
+    val hsnSacType: String = "HSN"
 )

@@ -12,6 +12,7 @@ import com.core2studio.mymanager.data.firestore.FirestoreClientRepository
 import com.core2studio.mymanager.data.firestore.FirestoreCartRepository
 import com.core2studio.mymanager.data.firestore.FirestoreOrderRepository
 import com.core2studio.mymanager.data.firestore.FirestoreProductRepository
+import com.core2studio.mymanager.data.firestore.FirestoreUserRepository
 import com.core2studio.mymanager.data.firestore.SyncManager
 import com.core2studio.mymanager.data.storage.CloudinaryStorage
 import com.core2studio.mymanager.data.local.MyManagerDatabase
@@ -90,6 +91,10 @@ class MyManagerApplication : Application() {
         )
     }
 
+    val firestoreUserRepository: com.core2studio.mymanager.data.firestore.FirestoreUserRepository by lazy {
+        com.core2studio.mymanager.data.firestore.FirestoreUserRepository()
+    }
+
     val syncManager: com.core2studio.mymanager.data.firestore.SyncManager by lazy {
         com.core2studio.mymanager.data.firestore.SyncManager(
             database = database,
@@ -109,6 +114,10 @@ class MyManagerApplication : Application() {
         com.core2studio.mymanager.data.repository.ProductShareGenerator(this)
     }
 
+    val settingsRepository: com.core2studio.mymanager.data.repository.SettingsRepository by lazy {
+        com.core2studio.mymanager.data.repository.SettingsRepository(this, authRepository, userProfileRepository)
+    }
+
     val cloudinaryStorage: com.core2studio.mymanager.data.storage.CloudinaryStorage by lazy {
         com.core2studio.mymanager.data.storage.CloudinaryStorage(
             cloudName = BuildConfig.CLOUDINARY_CLOUD_NAME,
@@ -118,6 +127,14 @@ class MyManagerApplication : Application() {
 
     val themeMode = mutableIntStateOf(0)
     val currencyCode = mutableStateOf(com.core2studio.mymanager.data.utils.CurrencyUtils.DEFAULT_CURRENCY)
+
+    /**
+     * Outlives individual ViewModels so debounced work (draft auto-save) can be
+     * flushed when a ViewModel is cleared instead of being cancelled with it.
+     */
+    val applicationScope = kotlinx.coroutines.CoroutineScope(
+        kotlinx.coroutines.SupervisorJob() + kotlinx.coroutines.Dispatchers.IO
+    )
 
     fun loadThemeMode() {
         val prefs = getSharedPreferences("mymanager_theme", Context.MODE_PRIVATE)

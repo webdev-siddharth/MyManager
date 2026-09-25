@@ -16,7 +16,6 @@ import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Verified
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -30,6 +29,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.core2studio.mymanager.ui.components.ButtonLoadingIndicator
 
 @Composable
 fun EmailVerificationScreen(
@@ -111,11 +111,7 @@ fun EmailVerificationScreen(
             shape = RoundedCornerShape(12.dp)
         ) {
             if (state.isLoading) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(24.dp),
-                    color = MaterialTheme.colorScheme.onPrimary,
-                    strokeWidth = 2.dp
-                )
+                ButtonLoadingIndicator(modifier = Modifier.size(24.dp))
             } else {
                 Text("I've verified — Continue", fontWeight = FontWeight.SemiBold)
             }

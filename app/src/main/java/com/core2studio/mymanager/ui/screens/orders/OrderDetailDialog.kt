@@ -122,9 +122,9 @@ fun OrderDetailDialog(
                 ) {
                     statusOptions.forEach { status ->
                         val chipColor = when (status) {
-                            "PENDING" -> Color(0xFFD32F2F)
-                            "PARTIAL" -> Color(0xFFF57C00)
-                            "COMPLETED" -> Color(0xFF388E3C)
+                            "PENDING" -> com.core2studio.mymanager.theme.StatusPending
+                            "PARTIAL" -> com.core2studio.mymanager.theme.StatusPartial
+                            "COMPLETED" -> com.core2studio.mymanager.theme.StatusCompleted
                             else -> MaterialTheme.colorScheme.primary
                         }
                         FilterChip(

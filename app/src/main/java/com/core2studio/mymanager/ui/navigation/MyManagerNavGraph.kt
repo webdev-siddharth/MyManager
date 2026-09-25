@@ -55,10 +55,13 @@ import com.core2studio.mymanager.ui.screens.products.ProductViewModel
 import com.core2studio.mymanager.ui.screens.products.ProductsScreen
 import com.core2studio.mymanager.ui.screens.settings.BusinessCardScreen
 import com.core2studio.mymanager.ui.screens.settings.BusinessInfoScreen
+import com.core2studio.mymanager.ui.screens.settings.GstSettingsScreen
 import com.core2studio.mymanager.ui.screens.settings.SettingsScreen
 import com.core2studio.mymanager.ui.screens.settings.SettingsViewModel
 import com.core2studio.mymanager.ui.screens.settings.UserProfileScreen
 import com.core2studio.mymanager.ui.screens.orders.AddOrderScreen
+import com.core2studio.mymanager.ui.screens.orders.CreateOrderScreen
+import com.core2studio.mymanager.ui.screens.orders.CreateOrderViewModel
 import com.core2studio.mymanager.ui.screens.orders.OrderDetailScreen
 import com.core2studio.mymanager.ui.screens.orders.OrderViewModel
 import com.core2studio.mymanager.ui.screens.orders.OrdersScreen
@@ -100,6 +103,7 @@ fun MyManagerNavGraph(
 
     // Google Sign-In must be at the root so it's available from both auth and main content
     val context = LocalContext.current
+    val webClientId = androidx.compose.ui.res.stringResource(com.core2studio.mymanager.R.string.google_web_client_id)
     val googleSignInLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
     ) { result ->
@@ -131,8 +135,10 @@ fun MyManagerNavGraph(
                 authViewModel.setGoogleSignInError("Google sign-in failed. Please try again.")
             }
         } else {
-            Log.e("MyManager", "Google Sign-In cancelled or failed: resultCode=${result.resultCode}")
-            if (result.resultCode != Activity.RESULT_CANCELED) {
+            Log.e("MyManager", "Google Sign-In cancelled or failed: resultCode=${result.resultCode}, data=${result.data != null}")
+            // RESULT_CANCELED with data means Play Services returned a failure result
+            // (e.g. SHA-1/config mismatch). Plain back-out has data == null — stay quiet.
+            if (result.resultCode != Activity.RESULT_CANCELED || result.data != null) {
                 authViewModel.setGoogleSignInError("Google sign-in failed. Please try again.")
             }
         }
@@ -142,7 +148,7 @@ fun MyManagerNavGraph(
     LaunchedEffect(authState.isGoogleSignInTriggered) {
         if (authState.isGoogleSignInTriggered) {
             val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                .requestIdToken(context.getString(com.core2studio.mymanager.R.string.google_web_client_id))
+                .requestIdToken(webClientId)
                 .requestEmail()
                 .build()
             val googleSignInClient = GoogleSignIn.getClient(context, gso)
@@ -181,14 +187,15 @@ fun MyManagerNavGraph(
 @Composable
 private fun AuthContent(authViewModel: com.core2studio.mymanager.ui.screens.auth.AuthViewModel) {
     val navController = rememberNavController()
+    val authState by authViewModel.uiState.collectAsState()
 
     NavHost(navController = navController, startDestination = "login") {
         composable("login") {
             com.core2studio.mymanager.ui.screens.auth.LoginScreen(
                 viewModel = authViewModel,
                 onNavigateToSignUp = { navController.navigate("signup") },
-                onNavigateToForgotPassword = { email ->
-                    navController.navigate("forgot_password/${android.net.Uri.encode(email)}")
+                onNavigateToForgotPassword = {
+                    navController.navigate("forgot_password")
                 }
             )
         }
@@ -198,17 +205,10 @@ private fun AuthContent(authViewModel: com.core2studio.mymanager.ui.screens.auth
                 onNavigateToLogin = { navController.popBackStack() }
             )
         }
-        composable(
-            route = "forgot_password/{email}",
-            arguments = listOf(navArgument("email") { type = NavType.StringType })
-        ) { backStackEntry ->
-            val email = java.net.URLDecoder.decode(
-                backStackEntry.arguments?.getString("email") ?: "",
-                "UTF-8"
-            )
+        composable("forgot_password") {
             com.core2studio.mymanager.ui.screens.auth.ForgotPasswordScreen(
                 viewModel = authViewModel,
-                initialEmail = email,
+                initialEmail = authState.email,
                 onBack = { navController.popBackStack() }
             )
         }
@@ -224,14 +224,36 @@ private fun MainContent(
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
+    // Main-content ViewModels are scoped to this signed-in session only.
+    // MainContent sits inside key(isSignedIn), so disposing on sign-out/account
+    // change clears this store: onCleared() runs, viewModelScope cancels, and the
+    // next login starts with fresh state instead of the previous account's data.
+    val sessionViewModelStore = remember { androidx.lifecycle.ViewModelStore() }
+    val sessionViewModelOwner = remember(sessionViewModelStore) {
+        object : androidx.lifecycle.ViewModelStoreOwner {
+            override val viewModelStore: androidx.lifecycle.ViewModelStore
+                get() = sessionViewModelStore
+        }
+    }
+    androidx.compose.runtime.DisposableEffect(Unit) {
+        onDispose { sessionViewModelStore.clear() }
+    }
+
     // Shared ViewModels scoped to this content tree
-    val dashboardViewModel: com.core2studio.mymanager.ui.screens.dashboard.DashboardViewModel = viewModel(factory = factory)
-    val categoryViewModel: com.core2studio.mymanager.ui.screens.categories.CategoryViewModel = viewModel(factory = factory)
-    val productViewModel: com.core2studio.mymanager.ui.screens.products.ProductViewModel = viewModel(factory = factory)
-    val orderViewModel: com.core2studio.mymanager.ui.screens.orders.OrderViewModel = viewModel(factory = factory)
-    val clientViewModel: com.core2studio.mymanager.ui.screens.clients.ClientViewModel = viewModel(factory = factory)
-    val settingsViewModel: com.core2studio.mymanager.ui.screens.settings.SettingsViewModel = viewModel(factory = factory)
-    val cartViewModel: com.core2studio.mymanager.ui.screens.cart.CartViewModel = viewModel(factory = factory)
+    val dashboardViewModel: com.core2studio.mymanager.ui.screens.dashboard.DashboardViewModel =
+        viewModel(viewModelStoreOwner = sessionViewModelOwner, factory = factory)
+    val categoryViewModel: com.core2studio.mymanager.ui.screens.categories.CategoryViewModel =
+        viewModel(viewModelStoreOwner = sessionViewModelOwner, factory = factory)
+    val productViewModel: com.core2studio.mymanager.ui.screens.products.ProductViewModel =
+        viewModel(viewModelStoreOwner = sessionViewModelOwner, factory = factory)
+    val orderViewModel: com.core2studio.mymanager.ui.screens.orders.OrderViewModel =
+        viewModel(viewModelStoreOwner = sessionViewModelOwner, factory = factory)
+    val clientViewModel: com.core2studio.mymanager.ui.screens.clients.ClientViewModel =
+        viewModel(viewModelStoreOwner = sessionViewModelOwner, factory = factory)
+    val settingsViewModel: com.core2studio.mymanager.ui.screens.settings.SettingsViewModel =
+        viewModel(viewModelStoreOwner = sessionViewModelOwner, factory = factory)
+    val cartViewModel: com.core2studio.mymanager.ui.screens.cart.CartViewModel =
+        viewModel(viewModelStoreOwner = sessionViewModelOwner, factory = factory)
 
     LaunchedEffect(Unit) {
         settingsViewModel.loadSettings()
@@ -239,14 +261,18 @@ private fun MainContent(
 
     val settingsUiState by settingsViewModel.uiState.collectAsState()
 
-    LaunchedEffect(settingsUiState.businessName, settingsUiState.businessEmail, settingsUiState.businessPhone, settingsUiState.businessAddress, settingsUiState.website, settingsUiState.gstin) {
+    LaunchedEffect(settingsUiState.businessName, settingsUiState.businessEmail, settingsUiState.businessPhone, settingsUiState.businessAddress, settingsUiState.website, settingsUiState.gstin, settingsUiState.gstEnabled, settingsUiState.gstPricingMode, settingsUiState.gstRate, settingsUiState.gstType) {
         orderViewModel.setBusinessInfo(
             name = settingsUiState.businessName,
             email = settingsUiState.businessEmail,
             phone = settingsUiState.businessPhone,
             address = settingsUiState.businessAddress,
             website = settingsUiState.website,
-            gstin = settingsUiState.gstin
+            gstin = settingsUiState.gstin,
+            gstEnabled = settingsUiState.gstEnabled,
+            gstPricingMode = settingsUiState.gstPricingMode,
+            gstRate = settingsUiState.gstRate,
+            gstType = settingsUiState.gstType
         )
     }
 
@@ -301,7 +327,7 @@ private fun MainContent(
             composable("dashboard") {
                 val uiState by dashboardViewModel.uiState.collectAsState()
                 com.core2studio.mymanager.ui.screens.dashboard.DashboardScreen(
-                    onNavigateToOrders = { navController.navigate("add_order") },
+                    onNavigateToOrders = { navController.navigate("create_order") },
                     onNavigateToCategories = {
                         navController.navigate("categories") {
                             popUpTo(navController.graph.findStartDestination().id) {
@@ -344,7 +370,9 @@ private fun MainContent(
                     cartCount = cartUiState.cartCount,
                     onAddCategory = { name, desc -> categoryViewModel.addCategory(name, desc) },
                     onUpdateCategory = { category -> categoryViewModel.updateCategory(category) },
-                    onDeleteCategory = { category -> categoryViewModel.deleteCategory(category) }
+                    onDeleteCategory = { category -> categoryViewModel.deleteCategory(category) },
+                    errorMessage = uiState.errorMessage,
+                    onDismissError = { categoryViewModel.clearError() }
                 )
             }
 
@@ -385,7 +413,10 @@ private fun MainContent(
                     categoryName = uiState.categoryName,
                     cartCount = cartViewModel.uiState.collectAsState().value.cartCount,
                     onDeleteProduct = { product -> productViewModel.deleteProduct(product) },
-                    onDeleteProducts = { products -> productViewModel.deleteProducts(products) }
+                    onDeleteProducts = { products -> productViewModel.deleteProducts(products) },
+                    isLoading = uiState.isLoading,
+                    errorMessage = uiState.errorMessage,
+                    onDismissError = { productViewModel.clearError() }
                 )
             }
 
@@ -398,9 +429,9 @@ private fun MainContent(
                 com.core2studio.mymanager.ui.screens.products.AddProductScreen(
                     categoryId = categoryId,
                     onBack = { navController.popBackStack() },
-                    onSave = { name, desc, price, imageUriStrings ->
+                    onSave = { name, desc, price, imageUriStrings, hsnSacCode, hsnSacType ->
                         val uris = imageUriStrings.map { android.net.Uri.parse(it) }
-                        productViewModel.addProduct(categoryId, name, desc, price, uris, context)
+                        productViewModel.addProduct(categoryId, name, desc, price, uris, context, hsnSacCode, hsnSacType)
                         navController.popBackStack()
                     }
                 )
@@ -434,7 +465,9 @@ private fun MainContent(
                     onAddToCart = { product, quantity ->
                         cartViewModel.addToCart(product, quantity)
                         navController.popBackStack()
-                    }
+                    },
+                    errorMessage = uiState.errorMessage,
+                    onDismissError = { productViewModel.clearError() }
                 )
             }
 
@@ -468,14 +501,19 @@ private fun MainContent(
                     onBack = { navController.popBackStack() },
                     onAddClient = { name, phone, email, address ->
                         orderViewModel.addClient(name, phone, email, address)
-                    }
+                    },
+                    gstEnabled = settingsUiState.gstEnabled,
+                    gstin = settingsUiState.gstin,
+                    gstPricingMode = settingsUiState.gstPricingMode,
+                    gstRate = settingsUiState.gstRate,
+                    gstType = settingsUiState.gstType
                 )
             }
 
             composable("orders") {
                 val uiState by orderViewModel.uiState.collectAsState()
                 com.core2studio.mymanager.ui.screens.orders.OrdersScreen(
-                    onAddOrder = { navController.navigate("add_order") },
+                    onAddOrder = { navController.navigate("create_order") },
                     onOrderClick = { orderId -> navController.navigate("order/$orderId") },
                     orders = uiState.orders,
                     searchQuery = uiState.searchQuery,
@@ -483,7 +521,9 @@ private fun MainContent(
                     onSearchQueryChange = { orderViewModel.onSearchQueryChange(it) },
                     clientNameResolver = { clientId ->
                         uiState.clients[clientId]?.name ?: "Unknown"
-                    }
+                    },
+                    errorMessage = uiState.errorMessage,
+                    onDismissError = { orderViewModel.clearError() }
                 )
             }
 
@@ -534,6 +574,27 @@ private fun MainContent(
                 )
             }
 
+            composable(
+                route = "create_order?draftId={draftId}&clientId={clientId}",
+                arguments = listOf(
+                    navArgument("draftId") { type = NavType.StringType; nullable = true; defaultValue = null },
+                    navArgument("clientId") { type = NavType.StringType; nullable = true; defaultValue = null }
+                )
+            ) { backStackEntry ->
+                val draftId = backStackEntry.arguments?.getString("draftId")
+                val clientId = backStackEntry.arguments?.getString("clientId")
+                val createOrderViewModel = viewModel<CreateOrderViewModel>(factory = factory)
+                val uiState by orderViewModel.uiState.collectAsState()
+                com.core2studio.mymanager.ui.screens.orders.CreateOrderScreen(
+                    onBack = { navController.popBackStack() },
+                    draftId = draftId,
+                    preSelectedClientId = clientId,
+                    clients = uiState.allClients,
+                    products = uiState.allProducts,
+                    viewModel = createOrderViewModel
+                )
+            }
+
             composable("clients") {
                 val uiState by clientViewModel.uiState.collectAsState()
                 com.core2studio.mymanager.ui.screens.clients.ClientsScreen(
@@ -547,7 +608,9 @@ private fun MainContent(
                     onDismissAddDialog = { clientViewModel.dismissDialog() },
                     onAddClient = { name, phone, email, address ->
                         clientViewModel.addClient(name, phone, email, address)
-                    }
+                    },
+                    errorMessage = uiState.errorMessage,
+                    onDismissError = { clientViewModel.clearError() }
                 )
             }
 
@@ -560,14 +623,18 @@ private fun MainContent(
                 androidx.compose.runtime.LaunchedEffect(clientId) {
                     clientViewModel.loadClientDetail(clientId)
                 }
-                LaunchedEffect(settingsUiState.businessName, settingsUiState.businessEmail, settingsUiState.businessPhone, settingsUiState.businessAddress, settingsUiState.website, settingsUiState.gstin) {
+                LaunchedEffect(settingsUiState.businessName, settingsUiState.businessEmail, settingsUiState.businessPhone, settingsUiState.businessAddress, settingsUiState.website, settingsUiState.gstin, settingsUiState.gstEnabled, settingsUiState.gstPricingMode, settingsUiState.gstRate, settingsUiState.gstType) {
                     clientViewModel.setBusinessInfo(
                         name = settingsUiState.businessName,
                         email = settingsUiState.businessEmail,
                         phone = settingsUiState.businessPhone,
                         address = settingsUiState.businessAddress,
                         website = settingsUiState.website,
-                        gstin = settingsUiState.gstin
+                        gstin = settingsUiState.gstin,
+                        gstEnabled = settingsUiState.gstEnabled,
+                        gstPricingMode = settingsUiState.gstPricingMode,
+                        gstRate = settingsUiState.gstRate,
+                        gstType = settingsUiState.gstType
                     )
                 }
                 com.core2studio.mymanager.ui.screens.clients.ClientDetailScreen(
@@ -618,7 +685,9 @@ private fun MainContent(
                     onThemeModeSelected = { settingsViewModel.saveThemeMode(it) },
                     currencyCode = uiState.currencyCode,
                     onCurrencySelected = { settingsViewModel.saveCurrency(it) },
-                    onBack = { navController.popBackStack() }
+                    onBack = { navController.popBackStack() },
+                    settingsViewModel = settingsViewModel,
+                    onAccountDeleted = { authViewModel.signOut() }
                 )
             }
 
@@ -639,6 +708,34 @@ private fun MainContent(
                     onUploadLogo = { uri -> settingsViewModel.uploadLogo(uri) },
                     onClearLogo = { settingsViewModel.clearLogo() },
                     onViewBusinessCard = { navController.navigate("business_card") },
+                    onGstSettingsClick = { navController.navigate("gst_settings") },
+                    onBack = { navController.popBackStack() }
+                )
+            }
+
+            composable("gst_settings") {
+                val uiState by settingsViewModel.uiState.collectAsState()
+                com.core2studio.mymanager.ui.screens.settings.GstSettingsScreen(
+                    gstPricingMode = uiState.gstPricingMode,
+                    gstRate = uiState.gstRate,
+                    gstType = uiState.gstType,
+                    hasGstin = uiState.gstin.isNotBlank(),
+                    gstEnabled = uiState.gstEnabled,
+                    onSave = { gstEnabled: Boolean, pricingMode: String, rate: Int, type: String ->
+                        settingsViewModel.saveBusinessInfo(
+                            name = uiState.businessName,
+                            email = uiState.businessEmail,
+                            phone = uiState.businessPhone,
+                            address = uiState.businessAddress,
+                            gstin = uiState.gstin,
+                            website = uiState.website,
+                            gstEnabled = gstEnabled,
+                            gstPricingMode = pricingMode,
+                            gstRate = rate,
+                            gstType = type
+                        )
+                        navController.popBackStack()
+                    },
                     onBack = { navController.popBackStack() }
                 )
             }

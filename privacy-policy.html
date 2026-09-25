@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Privacy Policy - MyManager</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif; line-height: 1.6; color: #2C3E50; background: #F0F4F8; padding: 2rem; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 3rem; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+        h1 { color: #2D6A4F; font-size: 2.5rem; margin-bottom: 0.5rem; text-align: center; }
+        .subtitle { text-align: center; color: #6B7B73; margin-bottom: 2rem; }
+        .last-updated { text-align: center; color: #999; font-size: 0.9rem; margin-bottom: 3rem; padding-bottom: 1rem; border-bottom: 1px solid #E8F5E9; }
+        h2 { color: #2D6A4F; font-size: 1.5rem; margin: 2.5rem 0 1rem; padding-bottom: 0.5rem; border-bottom: 2px solid #E8F5E9; }
+        h3 { color: #40916C; font-size: 1.2rem; margin: 1.5rem 0 0.75rem; }
+        p { margin-bottom: 1rem; }
+        ul { margin: 1rem 0 1rem 1.5rem; }
+        li { margin-bottom: 0.5rem; }
+        .highlight-box { background: #E8F5E9; border-left: 4px solid #2D6A4F; padding: 1rem 1.5rem; margin: 1.5rem 0; border-radius: 0 8px 8px 0; }
+        .data-table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; }
+        .data-table th, .data-table td { padding: 0.75rem 1rem; text-align: left; border: 1px solid #E8F5E9; }
+        .data-table th { background: #E8F5E9; color: #2D6A4F; font-weight: 600; }
+        .data-table tr:nth-child(even) { background: #FAFAFA; }
+        .contact-box { background: #2D6A4F; color: white; padding: 2rem; border-radius: 12px; text-align: center; margin-top: 3rem; }
+        .contact-box a { color: #A8F5D0; text-decoration: underline; }
+        footer { text-align: center; margin-top: 3rem; color: #999; font-size: 0.85rem; }
+        @media (max-width: 600px) { .container { padding: 1.5rem; } h1 { font-size: 2rem; } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Privacy Policy</h1>
+        <p class="subtitle">MyManager — Business Management App</p>
+        <p class="last-updated">Last Updated: September 2026</p>
+
+        <h2>1. Overview</h2>
+        <p>MyManager ("we", "our", "the app") is a business management application for small businesses and freelancers. This Privacy Policy explains what data we collect, how we use it, and your rights regarding your information.</p>
+        <p>By using MyManager, you agree to the collection and use of information in accordance with this policy.</p>
+
+        <h2>2. Information We Collect</h2>
+        <p>We collect the following categories of data to provide the app's core functionality:</p>
+
+        <table class="data-table">
+            <thead>
+                <tr><th>Data Category</th><th>Examples</th><th>Source</th><th>Purpose</th></tr>
+            </thead>
+            <tbody>
+                <tr><td>Account Information</td><td>Email address, display name</td><td>Firebase Authentication (sign-up/sign-in)</td><td>Create and secure your account, enable login</td></tr>
+                <tr><td>Business Profile</td><td>Business name, email, phone, address, GSTIN, website, logo</td><td>User input (Business Setup, Settings)</td><td>Generate invoices, business cards, PDFs; identify your business</td></tr>
+                <tr><td>Client Data</td><td>Client name, phone, email, address</td><td>User input</td><td>Client management, order history, invoice generation</td></tr>
+                <tr><td>Product Catalog</td><td>Product names, descriptions, prices, images</td><td>User input</td><td>Product management, catalog sharing, order creation</td></tr>
+                <tr><td>Orders & Transactions</td><td>Order details, amounts, payments, status, notes, custom fields</td><td>User input</td><td>Order tracking, revenue analytics, invoice generation</td></tr>
+                <tr><td>Shopping Cart</td><td>Cart items, quantities, prices</td><td>User actions</td><td>Checkout flow, quotation PDFs</td></tr>
+                <tr><td>Images</td><td>Product photos, business logo</td><td>User upload (gallery/camera)</td><td>Visual product catalog, branded documents</td></tr>
+            </tbody>
+        </table>
+
+        <h2>3. How We Use Your Data</h2>
+        <ul>
+            <li><strong>Core Functionality:</strong> Provide product catalog, client management, order tracking, invoicing, and analytics</li>
+            <li><strong>Document Generation:</strong> Create professional PDF invoices, product catalogs, quotations, and business cards</li>
+            <li><strong>Cloud Sync:</strong> Backup and synchronize your data across devices via Firebase Firestore</li>
+            <li><strong>Image Storage:</strong> Host product images and logos via Cloudinary for fast delivery</li>
+            <li><strong>Account Security:</strong> Authenticate users, verify email addresses, enable password reset</li>
+            <li><strong>Offline Access:</strong> Local Room database enables full offline functionality</li>
+        </ul>
+
+        <h2>4. Data Storage & Security</h2>
+        <div class="highlight-box">
+            <strong>Your data is protected by industry-standard security measures:</strong>
+        </div>
+        <ul>
+            <li><strong>In Transit:</strong> All network communication uses TLS/HTTPS (Firebase, Cloudinary, Google APIs)</li>
+            <li><strong>At Rest:</strong> Firebase Firestore (Google Cloud) and Cloudinary encrypt data at rest</li>
+            <li><strong>Local Storage:</strong> Android Room database stores encrypted data in app-private storage</li>
+            <li><strong>Authentication:</strong> Firebase Authentication with email verification and Google Sign-In</li>
+            <li><strong>Access Control:</strong> Firestore security rules restrict data access to the authenticated user only</li>
+        </ul>
+
+        <h2>5. Data Sharing</h2>
+        <p>We do <strong>not</strong> sell your personal information. Data is shared only with service providers essential to app functionality:</p>
+        <table class="data-table">
+            <thead>
+                <tr><th>Provider</th><th>Purpose</th><th>Data Shared</th></tr>
+            </thead>
+            <tbody>
+                <tr><td>Firebase (Google)</td><td>Authentication, Database, Hosting</td><td>Account info, business data, orders, clients, products</td></tr>
+                <tr><td>Cloudinary</td><td>Image Storage & Delivery</td><td>Product images, business logo</td></tr>
+                <tr><td>Google Play Services</td><td>Google Sign-In</td><td>Account credentials (handled by Google)</td></tr>
+            </tbody>
+        </table>
+        <p>No data is shared with advertising networks, analytics providers (unless you opt-in), or data brokers.</p>
+
+        <h2>6. Your Rights & Controls</h2>
+        <h3>Access & Modify</h3>
+        <p>You can view and edit your business profile, clients, products, and orders directly in the app at any time.</p>
+
+        <h3>Export Your Data</h3>
+        <p>Generate PDF invoices, product catalogs, and client reports from within the app.</p>
+
+        <h3>Delete Your Account</h3>
+        <p>You can permanently delete your account and all associated data from the app settings. This action:</p>
+        <ul>
+            <li>Removes your Firestore user document and all subcollections (products, clients, orders, cart, categories)</li>
+            <li>Deletes your product images and business logo from Cloudinary</li>
+            <li>Wipes all local data from your device</li>
+            <li>Signs you out and revokes authentication</li>
+        </ul>
+        <p class="highlight-box">This action is irreversible. Once deleted, data cannot be recovered.</p>
+
+        <h3>Data Retention</h3>
+        <p>We retain your data as long as your account is active. Upon account deletion, data is removed from our systems within 30 days (Firebase/Cloudinary standard deletion lifecycle).</p>
+
+        <h2>7. Children's Privacy</h2>
+        <p>MyManager is not directed to children under 13 (or 16 in certain jurisdictions). We do not knowingly collect personal information from children. If you believe a child has provided us with personal information, please contact us immediately.</p>
+
+        <h2>8. Changes to This Policy</h2>
+        <p>We may update this Privacy Policy from time to time. Changes will be posted in the app and on this page with an updated "Last Updated" date. Continued use of the app after changes constitutes acceptance.</p>
+
+        <h2>9. Legal Basis (GDPR)</h2>
+        <p>For users in the European Economic Area, our legal bases for processing are:</p>
+        <ul>
+            <li><strong>Contract Performance:</strong> Providing the app's core features</li>
+            <li><strong>Legitimate Interest:</strong> Security, fraud prevention, service improvement</li>
+            <li><strong>Consent:</strong> Optional data (business profile, images) and marketing communications</li>
+        </ul>
+
+        <div class="contact-box">
+            <h2>Contact Us</h2>
+            <p>Questions about this Privacy Policy or your data?</p>
+            <p style="margin-top: 1rem; font-size: 1.1rem;">
+                <a href="mailto:studios.2core@gmail.com">studios.2core@gmail.com</a>
+            </p>
+        </div>
+
+        <footer>
+            <p>&copy; 2026 MyManager. All rights reserved.</p>
+        </footer>
+    </div>
+</body>
+</html>

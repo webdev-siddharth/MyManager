@@ -101,6 +101,12 @@ class AuthRepository {
         Log.e("AuthRepository", "Failed to send password reset email", e)
     }
 
+    suspend fun deleteUser(): Result<Unit> = runCatching {
+        auth.currentUser?.delete()?.await()
+    }.map { }.onFailure { e ->
+        Log.e("AuthRepository", "Failed to delete Firebase Auth user", e)
+    }
+
     fun signOut() {
         auth.signOut()
     }

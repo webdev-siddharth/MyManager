@@ -60,6 +60,7 @@ import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.core2studio.mymanager.data.local.entity.Product
 import com.core2studio.mymanager.ui.components.EmptyState
+import com.core2studio.mymanager.ui.components.LoadingIndicator
 import com.core2studio.mymanager.ui.components.MyManagerCard
 import com.core2studio.mymanager.ui.components.MyManagerFAB
 import com.core2studio.mymanager.ui.components.MyManagerTopBar
@@ -80,7 +81,10 @@ fun ProductsScreen(
     categoryName: String = "Products",
     cartCount: Int = 0,
     onDeleteProduct: (Product) -> Unit = {},
-    onDeleteProducts: (List<Product>) -> Unit = {}
+    onDeleteProducts: (List<Product>) -> Unit = {},
+    isLoading: Boolean = false,
+    errorMessage: String? = null,
+    onDismissError: () -> Unit = {}
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
     var expandedProductId by remember { mutableStateOf<String?>(null) }
@@ -164,9 +168,21 @@ fun ProductsScreen(
                 )
             }
         },
+        snackbarHost = {
+            com.core2studio.mymanager.ui.components.ErrorSnackbarHost(
+                errorMessage = errorMessage,
+                onDismissError = onDismissError
+            )
+        },
         containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
-        if (products.isEmpty()) {
+        if (isLoading && products.isEmpty()) {
+            LoadingIndicator(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+            )
+        } else if (products.isEmpty()) {
             EmptyState(
                 message = "No products in this category yet",
 //                actionLabel = "Add Product",

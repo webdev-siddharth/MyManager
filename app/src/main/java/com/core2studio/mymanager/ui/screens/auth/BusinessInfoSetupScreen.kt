@@ -18,7 +18,6 @@ import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -32,6 +31,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.core2studio.mymanager.ui.components.ButtonLoadingIndicator
 
 @Composable
 fun BusinessInfoSetupScreen(
@@ -83,7 +83,7 @@ fun BusinessInfoSetupScreen(
             value = state.pendingBusinessName,
             onValueChange = { viewModel.updatePendingBusinessName(it) },
             label = { Text("Business Name *") },
-            leadingIcon = { Icon(Icons.Filled.Business, contentDescription = null, tint = MaterialTheme.colorScheme.outline) },
+            leadingIcon = { Icon(Icons.Filled.Business, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant) },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
             colors = textFieldColors,
@@ -97,7 +97,7 @@ fun BusinessInfoSetupScreen(
             value = state.pendingBusinessEmail,
             onValueChange = { viewModel.updatePendingBusinessEmail(it) },
             label = { Text("Business Email *") },
-            leadingIcon = { Icon(Icons.Filled.Email, contentDescription = null, tint = MaterialTheme.colorScheme.outline) },
+            leadingIcon = { Icon(Icons.Filled.Email, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant) },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
             colors = textFieldColors,
@@ -111,7 +111,7 @@ fun BusinessInfoSetupScreen(
             value = state.pendingBusinessPhone,
             onValueChange = { viewModel.updatePendingBusinessPhone(it) },
             label = { Text("Business Phone *") },
-            leadingIcon = { Icon(Icons.Filled.Phone, contentDescription = null, tint = MaterialTheme.colorScheme.outline) },
+            leadingIcon = { Icon(Icons.Filled.Phone, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant) },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
             colors = textFieldColors,
@@ -125,7 +125,7 @@ fun BusinessInfoSetupScreen(
             value = state.pendingBusinessAddress,
             onValueChange = { viewModel.updatePendingBusinessAddress(it) },
             label = { Text("Business Address *") },
-            leadingIcon = { Icon(Icons.Filled.LocationOn, contentDescription = null, tint = MaterialTheme.colorScheme.outline) },
+            leadingIcon = { Icon(Icons.Filled.LocationOn, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant) },
             modifier = Modifier.fillMaxWidth(),
             maxLines = 3,
             colors = textFieldColors,
@@ -139,7 +139,7 @@ fun BusinessInfoSetupScreen(
             value = state.pendingGstin,
             onValueChange = { viewModel.updatePendingGstin(it) },
             label = { Text("GSTIN (optional)") },
-            leadingIcon = { Icon(Icons.Filled.CreditCard, contentDescription = null, tint = MaterialTheme.colorScheme.outline) },
+            leadingIcon = { Icon(Icons.Filled.CreditCard, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant) },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
             colors = textFieldColors,
@@ -153,7 +153,7 @@ fun BusinessInfoSetupScreen(
             value = state.pendingWebsite,
             onValueChange = { viewModel.updatePendingWebsite(it) },
             label = { Text("Website (optional)") },
-            leadingIcon = { Icon(Icons.Filled.Business, contentDescription = null, tint = MaterialTheme.colorScheme.outline) },
+            leadingIcon = { Icon(Icons.Filled.Business, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant) },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
             colors = textFieldColors,
@@ -184,11 +184,7 @@ fun BusinessInfoSetupScreen(
             shape = RoundedCornerShape(12.dp)
         ) {
             if (state.isLoading) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(24.dp),
-                    color = MaterialTheme.colorScheme.onPrimary,
-                    strokeWidth = 2.dp
-                )
+                ButtonLoadingIndicator(modifier = Modifier.size(24.dp))
             } else {
                 Text("Continue", fontWeight = FontWeight.SemiBold)
             }

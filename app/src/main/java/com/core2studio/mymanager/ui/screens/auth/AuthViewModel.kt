@@ -244,18 +244,17 @@ class AuthViewModel(
                         pendingBusinessEmail = userEmail ?: ""
                     )
                 } else {
-                    // Existing user → sign in (both login and signup contexts)
+                    // Existing user → sign in immediately; ensure profile in background
                     val uid = authRepository.userId
                     val userEmail = authRepository.userEmail
                     val name = authRepository.displayName
-                    if (uid != null) {
-                        val existing = userProfileRepository.getProfile(uid)
-                        if (existing == null) {
+                    _uiState.value = _uiState.value.copy(isLoading = false, isSignedIn = true)
+                    viewModelScope.launch(Dispatchers.IO) {
+                        if (uid != null && userProfileRepository.getProfile(uid) == null) {
                             userProfileRepository.createProfile(uid, userEmail ?: "", name ?: "")
                         }
                     }
                     syncDataFromFirestore()
-                    _uiState.value = _uiState.value.copy(isLoading = false, isSignedIn = true)
                 }
             }.onFailure { e ->
                 val message = when {
@@ -296,6 +295,17 @@ class AuthViewModel(
     }
 
     fun signOut() {
+        val uid = authRepository.userId
+        // The Room tables carry no userId column, so the local cache must be dropped
+        // on sign-out — otherwise the next account that signs in on this device
+        // starts out seeing this account's orders, clients and products.
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                syncManager.clearLocalData(uid)
+            } catch (e: Exception) {
+                android.util.Log.e("AuthViewModel", "Failed to clear local data on sign-out", e)
+            }
+        }
         authRepository.signOut()
         _uiState.value = com.core2studio.mymanager.ui.screens.auth.AuthUiState()
     }
